@@ -22,6 +22,16 @@ public class TemperatureSensor extends AbstractBehavior<TemperatureSensor.Temper
         }
     }
 
+    public static final class GetTemperatur implements TemperatureCommand {
+        Optional<Double> value;
+        Optional<String> unit;
+
+        public GetTemperatur(Optional<Double> value, Optional<String> unit) {
+            this.value = value;
+            this.unit=unit;
+        }
+    }
+
     public static Behavior<TemperatureCommand> create(ActorRef<AirCondition.AirConditionCommand> airCondition, String groupId, String deviceId) {
         return Behaviors.setup(context -> new TemperatureSensor(context, airCondition, groupId, deviceId));
     }
@@ -29,7 +39,7 @@ public class TemperatureSensor extends AbstractBehavior<TemperatureSensor.Temper
     private final String groupId;
     private final String deviceId;
     private ActorRef<AirCondition.AirConditionCommand> airCondition;
-
+    private ActorRef<TemperatureSensor.TemperatureCommand> myTemp;
     public TemperatureSensor(ActorContext<TemperatureCommand> context, ActorRef<AirCondition.AirConditionCommand> airCondition, String groupId, String deviceId) {
         super(context);
         this.airCondition = airCondition;
@@ -43,6 +53,7 @@ public class TemperatureSensor extends AbstractBehavior<TemperatureSensor.Temper
     public Receive<TemperatureCommand> createReceive() {
         return newReceiveBuilder()
                 .onMessage(ReadTemperature.class, this::onReadTemperature)
+                .onMessage(GetTemperatur.class, this::onGetTemperature)
                 .onSignal(PostStop.class, signal -> onPostStop())
                 .build();
     }
@@ -50,6 +61,11 @@ public class TemperatureSensor extends AbstractBehavior<TemperatureSensor.Temper
     private Behavior<TemperatureCommand> onReadTemperature(ReadTemperature r) {
         getContext().getLog().info("TemperatureSensor received {}", r.value.get());
         this.airCondition.tell(new AirCondition.EnrichedTemperature(r.value, Optional.of("Celsius")));
+        return this;
+    }
+    private Behavior<TemperatureCommand> onGetTemperature(GetTemperatur r) {
+        getContext().getLog().info("TemperatureSensor received {}", r.value.get());
+        this.myTemp.tell(new TemperatureSensor.ReadTemperature(r.value));
         return this;
     }
 
