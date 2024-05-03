@@ -1,5 +1,6 @@
 package at.fhv.sysarch.lab2.homeautomation.devices;
 
+import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.PostStop;
 import akka.actor.typed.javadsl.AbstractBehavior;
@@ -23,6 +24,7 @@ public class AirCondition extends AbstractBehavior<AirCondition.AirConditionComm
     public interface AirConditionCommand {}
 
     public static final class PowerAirCondition implements AirConditionCommand {
+
         final Optional<Boolean> value;
 
         public PowerAirCondition(Optional<Boolean> value) {
@@ -44,6 +46,7 @@ public class AirCondition extends AbstractBehavior<AirCondition.AirConditionComm
     private final String deviceId;
     private boolean active = false;
     private boolean poweredOn = true;
+    private final double defaultTemperature = 20;
 
     public AirCondition(ActorContext<AirConditionCommand> context, String groupId, String deviceId) {
         super(context);
@@ -65,28 +68,20 @@ public class AirCondition extends AbstractBehavior<AirCondition.AirConditionComm
                 .build();
     }
 
+
     private Behavior<AirConditionCommand> onReadTemperature(EnrichedTemperature r) {
         getContext().getLog().info("Aircondition reading {}", r.value.get());
-        // TODO: process temperature
-        if(r.value.get() >= 15) {
-            getContext().getLog().info("Aircondition actived");
+        // TODO: process temperature ???
+        if(r.value.get() > defaultTemperature) {
+            getContext().getLog().info("Aircondition active");
             this.active = true;
         }
         else {
-            getContext().getLog().info("Aircondition deactived");
+            getContext().getLog().info("Aircondition deactivated");
             this.active =  false;
         }
 
         return Behaviors.same();
-    }
-
-    private Behavior<AirConditionCommand> onPowerAirConditionOff(PowerAirCondition r) {
-        getContext().getLog().info("Turning Aircondition to {}", r.value);
-
-        if(r.value.get() == false) {
-            return this.powerOff();
-        }
-        return this;
     }
 
     private Behavior<AirConditionCommand> onPowerAirConditionOn(PowerAirCondition r) {
@@ -98,6 +93,14 @@ public class AirCondition extends AbstractBehavior<AirCondition.AirConditionComm
                     .onMessage(PowerAirCondition.class, this::onPowerAirConditionOff)
                     .onSignal(PostStop.class, signal -> onPostStop())
                     .build();
+        }
+        return this;
+    }
+
+    private Behavior<AirConditionCommand> onPowerAirConditionOff(PowerAirCondition r) {
+        getContext().getLog().info("Turning Aircondition to {}", r.value);
+        if(r.value.get() == false) {
+            return this.powerOff();
         }
         return this;
     }
