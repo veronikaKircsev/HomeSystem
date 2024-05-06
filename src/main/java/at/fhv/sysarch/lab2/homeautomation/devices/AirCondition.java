@@ -1,6 +1,5 @@
 package at.fhv.sysarch.lab2.homeautomation.devices;
 
-import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.PostStop;
 import akka.actor.typed.javadsl.AbstractBehavior;
@@ -8,16 +7,6 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 
-/**
- * This class shows ONE way to switch behaviors in object-oriented style. Another approach is the use of static
- * methods for each behavior.
- *
- * The switching of behaviors is not strictly necessary for this example, but is rather used for demonstration
- * purpose only.
- *
- * For an example with functional-style please refer to: {@link https://doc.akka.io/docs/akka/current/typed/style-guide.html#functional-versus-object-oriented-style}
- *
- */
 import java.util.Optional;
 
 public class AirCondition extends AbstractBehavior<AirCondition.AirConditionCommand> {
@@ -71,12 +60,10 @@ public class AirCondition extends AbstractBehavior<AirCondition.AirConditionComm
 
     private Behavior<AirConditionCommand> onReadTemperature(EnrichedTemperature r) {
         getContext().getLog().info("Aircondition reading {}", r.value.get());
-        // TODO: process temperature ???
         if(r.value.get() > defaultTemperature) {
             getContext().getLog().info("Aircondition active");
             this.active = true;
-        }
-        else {
+        } else {
             getContext().getLog().info("Aircondition deactivated");
             this.active =  false;
         }

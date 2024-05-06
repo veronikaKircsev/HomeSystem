@@ -1,6 +1,5 @@
 package at.fhv.sysarch.lab2.homeautomation.products;
 
-import at.fhv.sysarch.lab2.homeautomation.products.Product;
 
 public class Butter extends Product {
 

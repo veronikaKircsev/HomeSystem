@@ -16,9 +16,11 @@ public class TemperatureSensor extends AbstractBehavior<TemperatureSensor.Temper
 
     public static final class ReadTemperature implements TemperatureCommand {
         final Optional<Double> value;
+        final Optional<String> unit;
 
-        public ReadTemperature(Optional<Double> value) {
+        public ReadTemperature(Optional<Double> value, Optional<String> unit) {
             this.value = value;
+            this.unit = unit;
         }
     }
 

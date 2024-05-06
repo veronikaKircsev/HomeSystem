@@ -4,4 +4,5 @@ public class Vegetables {
 
     private double weightInKg = 0.4;
     private double price  = 0.9;
+    private String name = "vegetable";
 }

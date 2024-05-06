@@ -49,6 +49,7 @@ public class MediaStation extends AbstractBehavior<MediaStation.MediaStationComm
 
 
     private Behavior<MediaStationCommand> turnOnOff(ChangeCondition c){
+        getContext().getLog().info("MediaStation read command {}", c.isOn.get());
         if (isOn && c.isOn.get()){
             getContext().getLog().info("Sorry a movie is going");
         } else if (isOn && !c.isOn.get()){

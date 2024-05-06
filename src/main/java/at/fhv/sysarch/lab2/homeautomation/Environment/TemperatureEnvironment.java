@@ -40,13 +40,8 @@ public class TemperatureEnvironment extends AbstractBehavior<TemperatureEnvironm
         }
     }
 
-
-    //the create() method is used to create the behavior for the Environment actor.
-    // It returns a Behavior instance that defines how the actor should behave.
     public static Behavior<TemperatureEnvironmentCommand> create(ActorRef<TemperatureSensor.TemperatureCommand> tempSensor, int startingTemperature){
-        //Behaviors.setup(), which is a factory method used to define the initial behavior of the actor
-        //the actor's context, which provides access to various features and utilities
-        // for managing the actor's lifecycle and interacting with other actors
+
         return Behaviors.setup(context ->  Behaviors.withTimers(timers -> new TemperatureEnvironment(context, tempSensor, timers, startingTemperature)));
     }
 
@@ -60,14 +55,10 @@ public class TemperatureEnvironment extends AbstractBehavior<TemperatureEnvironm
         this.temperatureTimeScheduler.startTimerAtFixedRate(new TemperatureChanger(), Duration.ofSeconds(5));
     }
 
-    //Any Akka actor will extend the AbstractActor abstract class and implement the createReceive() method
-    // for handling the incoming messages from other actors:
     @Override
     public Receive<TemperatureEnvironmentCommand> createReceive() {
-        // It can receive messages from other actors and will
-        // discard them because no matching message patterns are defined in the ReceiveBuilder.
+
         return newReceiveBuilder()
-                //react to incoming messages
                 .onMessage(TemperatureChanger.class, this::onChangeTemperature)
                 .onMessage(SetTemperature.class, this::onSetTemperature)
                 .onSignal(PostStop.class, signal -> onPostStop())
@@ -85,7 +76,7 @@ public class TemperatureEnvironment extends AbstractBehavior<TemperatureEnvironm
         double randomValue = random.nextDouble() * 2 - 1;
         this.temperature += randomValue;
         getContext().getLog().info("TemperatureEnvironment received {}", temperature);
-        this.temperatureSensor.tell(new TemperatureSensor.ReadTemperature(Optional.of(temperature)));
+        this.temperatureSensor.tell(new TemperatureSensor.ReadTemperature(Optional.of(temperature), Optional.of("Celsius")));
         selfRef.tell(new TemperatureEnvironment.SetTemperature(Optional.of(temperature)));
         return this;
     }

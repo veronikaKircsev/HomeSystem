@@ -3,22 +3,21 @@ package at.fhv.sysarch.lab2.homeautomation.devices.fridge;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
-import akka.actor.typed.PostStop;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
+import at.fhv.sysarch.lab2.homeautomation.Environment.InternetEnvironment;
 import at.fhv.sysarch.lab2.homeautomation.products.Product;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class Fridge extends AbstractBehavior<Fridge.FridgeCommand> {
 
-
-    public interface FridgeCommand {
-
-    }
+    public interface FridgeCommand { }
 
     public static final class Consume implements FridgeCommand {
         final Optional<Product> product;
@@ -36,58 +35,96 @@ public class Fridge extends AbstractBehavior<Fridge.FridgeCommand> {
         }
     }
 
+    public static final class ReceiveProducts implements FridgeCommand {
+        final Optional<Map<Product, Integer>> products;
 
+        public ReceiveProducts(Optional<Map<Product, Integer>> products) {
+            this.products = products;
+        }
+    }
 
     private final String groupId;
     private final String deviceId;
-    private final double maxNumberOfProducts;
+    private final int maxNumberOfProducts;
     private final double maxWeightLoad;
-    private final ActorRef<Gateway.GatewayCommand> gateway;
-    private final ActorRef<OpticSensor.OpticSensorCommand> opticSensor;
-    private final ActorRef<OrderProcessManager.OrderCommand> orderProcessManager;
-    private final ActorRef<ProductListMemory.ProductProcessCommand> productListMemory;
-    private final ActorRef<SpaceMemory.SpaceMemoryCommand> spaceMemory;
-    private final ActorRef<SpaceSensor.SpaceSensorCommand> spaceSensor;
-    private final ActorRef<WeightMemory.WeightMemoryCommand> weightMemory;
-    private final ActorRef<WeightSensor.WeightSensorCommand> weightSensor;
+    private ActorRef<Gateway.GatewayCommand> gateway;
+    private ActorRef<OpticSensor.OpticSensorCommand> opticSensor;
+    private ActorRef<OrderProcessManager.OrderCommand> orderProcessManager;
+    private ActorRef<ProductListMemory.ProductProcessCommand> productListMemory;
+    private ActorRef<SpaceMemory.SpaceMemoryCommand> spaceMemory;
+    private ActorRef<SpaceSensor.SpaceSensorCommand> spaceSensor;
+    private ActorRef<WeightMemory.WeightMemoryCommand> weightMemory;
+    private ActorRef<WeightSensor.WeightSensorCommand> weightSensor;
+    private ActorRef<InternetEnvironment.InternetEnvironmentCommand> internet;
+    private ActorRef<OrderHistoryManager.OrderHistoryManagerCommand> orderHistoryManager;
 
 
 
-    public Fridge(ActorContext<FridgeCommand> context, String groupId, String deviceId, double maxNumberOfProducts, double maxWeightLoad) {
+    public Fridge(ActorContext<FridgeCommand> context, String groupId, String deviceId, int maxNumberOfProducts,
+                  double maxWeightLoad, ActorRef<InternetEnvironment.InternetEnvironmentCommand> internet) {
         super(context);
-        //greeter = context.spawn(Greeter.create(), "greeter");
-        this.gateway = getContext().spawn(Gateway.create(), "Gateway");
-        this.opticSensor = getContext().spawn(OpticSensor.create(), "OpticSensor");
-        this.productListMemory = getContext().spawn(ProductListMemory.create(), "ProductListMemory");
-        this.spaceMemory = getContext().spawn(SpaceMemory.create(), "SpaceMemory");
-        this.spaceSensor = getContext().spawn(SpaceSensor.create(), "SpaceSensor");
-        this.weightMemory = getContext().spawn(WeightMemory.create(), "WeightMemory");
-        this.weightSensor = getContext().spawn(WeightSensor.create(), "WeightSensor");
-        this.orderProcessManager = getContext().spawn(OrderProcessManager.create(this.spaceMemory), "OrderProcessManger");
+
+        this.internet = internet;
+        this.orderHistoryManager = getContext().spawn(OrderHistoryManager.create("8"), "OrderHistoryManager");
+        this.gateway = getContext().spawn(Gateway.create("7", groupId, this.internet), "Gateway");
+        this.spaceMemory = getContext().spawn(SpaceMemory.create(maxNumberOfProducts, "6"), "SpaceMemory");
+        this.weightMemory = getContext().spawn(WeightMemory.create(maxWeightLoad, "4"), "WeightMemory");
+        this.spaceSensor = getContext().spawn(SpaceSensor.create("1", this.spaceMemory), "SpaceSensor");
+        this.weightSensor = getContext().spawn(WeightSensor.create("2", this.weightMemory), "WeightSensor");
+        this.orderProcessManager = getContext().spawn(OrderProcessManager.create(this.spaceMemory, "5", this.weightMemory, this.gateway, this.orderHistoryManager), "OrderProcessManger");
+        this.productListMemory = getContext().spawn(ProductListMemory.create(this.orderProcessManager), "ProductListMemory");
+        this.opticSensor = getContext().spawn(OpticSensor.create("3", this.productListMemory), "OpticSensor");
 
         this.groupId = groupId;
         this.deviceId = deviceId;
         this.maxNumberOfProducts = maxNumberOfProducts;
         this.maxWeightLoad = maxWeightLoad;
-        getContext().getLog().info("HomeAutomation Application started");
+        getContext().getLog().info("Fridge is started");
     }
 
-    public static Behavior<Fridge.FridgeCommand> create(String groupId, String deviceId, double maxNumberOfProducts, double maxWeightLoad) {
-        return Behaviors.setup(context -> new Fridge(context, groupId, deviceId, maxNumberOfProducts, maxWeightLoad));
+    public static Behavior<FridgeCommand> create(String groupId, String deviceId, int maxNumberOfProducts,
+                                                        double maxWeightLoad, ActorRef<InternetEnvironment.InternetEnvironmentCommand> internet) {
+        return Behaviors.setup(context -> new Fridge(context, groupId, deviceId, maxNumberOfProducts, maxWeightLoad, internet));
     }
 
     @Override
     public Receive<FridgeCommand> createReceive() {
-        return null;
+        return newReceiveBuilder()
+                .onMessage(Consume.class, this::consume)
+                .onMessage(Order.class, this::order)
+                .onMessage(ReceiveProducts.class, this::receiveProducts)
+                .build();
     }
 
     private Behavior<FridgeCommand> consume(Consume c){
-        //TODO implement
+        getContext().getLog().info("Fridge reading the consume{}", c.product.get().getName());
+        spaceSensor.tell(new SpaceSensor.ConsumeProduct(Optional.of(c.product.get())));
+        weightSensor.tell(new WeightSensor.ConsumeProduct(Optional.of(c.product.get())));
+        opticSensor.tell(new OpticSensor.ConsumeProduct(Optional.of(c.product.get())));
         return this;
     }
 
     private Behavior<FridgeCommand> order(Order o){
-        //TODO implement
+        getContext().getLog().info("Fridge reading the order{}", o.products.get());
+        Map<Product, Integer> productOrder = new HashMap<>();
+        int amount = 0;
+        for (Product product: o.products.get()) {
+            if (productOrder.containsKey(product)){
+                amount += productOrder.get(product);
+                productOrder.put(product, amount);
+            } else {
+                productOrder.put(product,1);
+            }
+        }
+        orderProcessManager.tell(new OrderProcessManager.StartOrder(Optional.of(productOrder)));
+        return this;
+    }
+
+    private Behavior<FridgeCommand> receiveProducts(ReceiveProducts r){
+        getContext().getLog().info("Fridge reading the received products{}", r.products.get());
+        weightSensor.tell(new WeightSensor.FillUpProduct(Optional.of(r.products.get())));
+        spaceSensor.tell(new SpaceSensor.FillUpProduct(Optional.of(r.products.get())));
+        opticSensor.tell(new OpticSensor.FillUpProduct(Optional.of(r.products.get())));
         return this;
     }
 }

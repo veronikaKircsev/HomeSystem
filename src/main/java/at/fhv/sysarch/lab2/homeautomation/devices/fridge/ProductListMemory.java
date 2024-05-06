@@ -1,59 +1,93 @@
 package at.fhv.sysarch.lab2.homeautomation.devices.fridge;
 
+import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
-import at.fhv.sysarch.lab2.homeautomation.helpClass.Order;
 import at.fhv.sysarch.lab2.homeautomation.products.Product;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 public class ProductListMemory extends AbstractBehavior<ProductListMemory.ProductProcessCommand> {
 
 
     public interface ProductProcessCommand{}
 
-    public ProductListMemory(ActorContext<ProductProcessCommand> context) {
-        super(context);
+    public static final class ConsumeProduct implements ProductProcessCommand {
+        final Optional<Product> product;
+        final Optional<Integer> number;
+
+        public ConsumeProduct(Optional<Product> product, Optional<Integer> number) {
+            this.product = product;
+            this.number = number;
+        }
     }
 
-    public static Behavior<ProductListMemory.ProductProcessCommand> create() {
-        return Behaviors.setup(context -> new ProductListMemory(context));
+    public static final class FillUpProduct implements ProductProcessCommand {
+        final Optional<Map<Product,Integer>> products;
+
+        public FillUpProduct(Optional<Map<Product,Integer>> products) {
+            this.products = products;
+        }
+    }
+
+    private Map<Product, Integer> productList = new HashMap<>();
+    private final ActorRef<OrderProcessManager.OrderCommand> order;
+
+    public ProductListMemory(ActorContext<ProductProcessCommand> context, ActorRef<OrderProcessManager.OrderCommand> order) {
+        super(context);
+        this.order = order;
+    }
+
+    public static Behavior<ProductListMemory.ProductProcessCommand> create(ActorRef<OrderProcessManager.OrderCommand> order) {
+        return Behaviors.setup(context -> new ProductListMemory(context, order));
     }
 
     @Override
     public Receive<ProductProcessCommand> createReceive() {
-        return null;
+        return newReceiveBuilder()
+                .onMessage(ConsumeProduct.class, this::consumeProduct)
+                .onMessage(FillUpProduct.class, this::fillUpProduct)
+                .build();
     }
 
-    private List<Product> productList;
-    private List<Order> orderList;
-
-    //TODO:initialise the products
-
-    public void addProduct(Product product) {
-        productList.add(product);
+    private Behavior<ProductProcessCommand> consumeProduct(ConsumeProduct c) {
+        getContext().getLog().info("ProductList reading the consume{} and value {}", c.product.get()
+                , c.number.get());
+        int amount;
+        if (productList.get(c.product.get())!= 0) {
+            amount = productList.get(c.product.get());
+            amount -= c.number.get();
+            if (amount == 0) {
+                Map<Product, Integer> o = new HashMap<>();
+                o.put(c.product.get(), 3);
+                order.tell(new OrderProcessManager.StartOrder(Optional.of(o)));
+                }
+            productList.put(c.product.get(), amount);
+        } else {
+            getContext().getLog().info("Fridge don't have enough {}" + c.product.get() );
+        }
+        return this;
     }
 
-    public Product getProduct(String name) {
-        for (Product product : productList) {
-            if (product.getName().equals(name)) {
-                Product product1 = product;
-                productList.remove(product);
-                return product1;
+    private Behavior<ProductProcessCommand> fillUpProduct(FillUpProduct f) {
+        getContext().getLog().info("ProductList reading the fillUp {}", f.products.get());
+        for (Product product: f.products.get().keySet()){
+            if (productList.containsKey(product)){
+                int amount = productList.get(product) + f.products.get().get(product);
+                productList.put(product, amount);
+            } else {
+                productList.put(product, f.products.get().get(product));
             }
         }
-        return null;
+        return this;
     }
 
-    public void addOrder(Order order) {
-        orderList.add(order);
-    }
 
-    public List<Order> getOrderHistory() {
-        List<Order> orderList1 = orderList;
-        return orderList1;
-    }
+
+
 }
