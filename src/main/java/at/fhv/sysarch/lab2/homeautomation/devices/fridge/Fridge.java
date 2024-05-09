@@ -10,6 +10,7 @@ import akka.actor.typed.javadsl.Receive;
 import at.fhv.sysarch.lab2.homeautomation.Environment.InternetEnvironment;
 import at.fhv.sysarch.lab2.homeautomation.products.Product;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +44,26 @@ public class Fridge extends AbstractBehavior<Fridge.FridgeCommand> {
         }
     }
 
+    public static final class ProductsRequest implements FridgeCommand {
+        final Optional<String> a;
+        public ProductsRequest(Optional<String> a){
+            this.a = a;
+        }
+    }
+
+
+    public static class ResponseBack implements FridgeCommand{
+        final Optional<String> a;
+        public ResponseBack(Optional<String> a) {
+
+            this.a = a;
+        }
+    }
+
+    public static class OrderHistory implements FridgeCommand{
+        public OrderHistory() {}
+    }
+
     private final String groupId;
     private final String deviceId;
     private final int maxNumberOfProducts;
@@ -57,6 +78,7 @@ public class Fridge extends AbstractBehavior<Fridge.FridgeCommand> {
     private ActorRef<WeightSensor.WeightSensorCommand> weightSensor;
     private ActorRef<InternetEnvironment.InternetEnvironmentCommand> internet;
     private ActorRef<OrderHistoryManager.OrderHistoryManagerCommand> orderHistoryManager;
+    private final Duration timeout = Duration.ofSeconds(3);
 
 
 
@@ -74,7 +96,6 @@ public class Fridge extends AbstractBehavior<Fridge.FridgeCommand> {
         this.orderProcessManager = getContext().spawn(OrderProcessManager.create(this.spaceMemory, "5", this.weightMemory, this.gateway, this.orderHistoryManager), "OrderProcessManger");
         this.productListMemory = getContext().spawn(ProductListMemory.create(this.orderProcessManager), "ProductListMemory");
         this.opticSensor = getContext().spawn(OpticSensor.create("3", this.productListMemory), "OpticSensor");
-
         this.groupId = groupId;
         this.deviceId = deviceId;
         this.maxNumberOfProducts = maxNumberOfProducts;
@@ -93,6 +114,9 @@ public class Fridge extends AbstractBehavior<Fridge.FridgeCommand> {
                 .onMessage(Consume.class, this::consume)
                 .onMessage(Order.class, this::order)
                 .onMessage(ReceiveProducts.class, this::receiveProducts)
+                .onMessage(ProductsRequest.class, this::productRequest)
+                .onMessage(ResponseBack.class, this::onResponse)
+                .onMessage(OrderHistory.class, this::onOrderHistory)
                 .build();
     }
 
@@ -127,4 +151,46 @@ public class Fridge extends AbstractBehavior<Fridge.FridgeCommand> {
         opticSensor.tell(new OpticSensor.FillUpProduct(Optional.of(r.products.get())));
         return this;
     }
+
+    private Behavior<FridgeCommand> productRequest(ProductsRequest r) {
+        getContext().ask(
+                ProductListMemory.Response.class,
+                productListMemory,
+                timeout,
+                (ActorRef<ProductListMemory.Response> ref) -> new ProductListMemory.RequestProducts(ref),
+                (response, throwable) -> {
+                    if (response != null) {
+                        getContext().getLog().info("Request get {}", response.result);
+                        return new ResponseBack(Optional.ofNullable(response.result));
+                    } else {
+                        getContext().getLog().info("Request failed");
+                        return new ResponseBack(Optional.empty());
+                    }
+                });
+        return this;
+    }
+
+    private Behavior<FridgeCommand> onResponse(ResponseBack a) {
+        getContext().getLog().info(a.a.get());
+        return this;
+    }
+
+    private Behavior<FridgeCommand> onOrderHistory(OrderHistory a) {
+        getContext().ask(
+                OrderHistoryManager.Response.class,
+                orderHistoryManager,
+                timeout,
+                (ActorRef<OrderHistoryManager.Response> ref) -> new OrderHistoryManager.OrderHistory(ref),
+                (response, throwable) -> {
+                    if (response != null) {
+                        getContext().getLog().info("Request get {}", response.result);
+                        return new ResponseBack(Optional.ofNullable(response.result));
+                    } else {
+                        getContext().getLog().info("Request failed");
+                        return new ResponseBack(Optional.empty());
+                    }
+                });
+        return this;
+    }
+
 }

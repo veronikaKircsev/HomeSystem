@@ -35,8 +35,24 @@ public class ProductListMemory extends AbstractBehavior<ProductListMemory.Produc
         }
     }
 
+    public static class RequestProducts implements ProductProcessCommand {
+        public final ActorRef<Response> replyTo;
+
+        public RequestProducts(ActorRef<Response> replyTo) {
+            this.replyTo = replyTo;
+        }
+    }
+
+    public static class Response {
+        public final String result;
+
+        public Response(String result) {
+            this.result = result;
+        }
+    }
+
     private Map<Product, Integer> productList = new HashMap<>();
-    private final ActorRef<OrderProcessManager.OrderCommand> order;
+    private ActorRef<OrderProcessManager.OrderCommand> order;
 
     public ProductListMemory(ActorContext<ProductProcessCommand> context, ActorRef<OrderProcessManager.OrderCommand> order) {
         super(context);
@@ -52,8 +68,12 @@ public class ProductListMemory extends AbstractBehavior<ProductListMemory.Produc
         return newReceiveBuilder()
                 .onMessage(ConsumeProduct.class, this::consumeProduct)
                 .onMessage(FillUpProduct.class, this::fillUpProduct)
+                .onMessage(RequestProducts.class, this::onRequest)
                 .build();
     }
+
+
+
 
     private Behavior<ProductProcessCommand> consumeProduct(ConsumeProduct c) {
         getContext().getLog().info("ProductList reading the consume{} and value {}", c.product.get()
@@ -88,6 +108,14 @@ public class ProductListMemory extends AbstractBehavior<ProductListMemory.Produc
     }
 
 
+    private Behavior<ProductProcessCommand> onRequest(RequestProducts request) {
+        StringBuilder sb = new StringBuilder();
+        for (Product product : productList.keySet()){
+            sb.append(product.getName()).append(" ").append(productList.get(product)).append("\n");
+        }
+        request.replyTo.tell(new Response(sb.toString()));
+        return Behaviors.same();
+    }
 
 
 }

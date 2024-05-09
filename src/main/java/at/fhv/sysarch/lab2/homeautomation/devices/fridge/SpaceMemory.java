@@ -22,6 +22,15 @@ public class SpaceMemory extends AbstractBehavior<SpaceMemory.SpaceMemoryCommand
         }
     }
 
+    public static final class FillUpProduct implements SpaceMemoryCommand {
+        final Optional<Integer> value;
+
+        public FillUpProduct(Optional<Integer> value) {
+            this.value = value;
+        }
+    }
+
+
     public static final class ReadSpace implements SpaceMemoryCommand {
         final ActorRef<SpaceMemory.RequiredSpace> replyTo;
 
@@ -30,13 +39,6 @@ public class SpaceMemory extends AbstractBehavior<SpaceMemory.SpaceMemoryCommand
         }
     }
 
-    public static final class FillUpProduct implements SpaceMemoryCommand {
-        final Optional<Integer> value;
-
-        public FillUpProduct(Optional<Integer> value) {
-            this.value = value;
-        }
-    }
 
     public static final class RequiredSpace {
         final Optional<Integer> value;

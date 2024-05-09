@@ -14,7 +14,6 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.Random;
 
-import static akka.actor.TypedActor.self;
 
 public class TemperatureEnvironment extends AbstractBehavior<TemperatureEnvironment.TemperatureEnvironmentCommand> {
 
@@ -28,7 +27,7 @@ public class TemperatureEnvironment extends AbstractBehavior<TemperatureEnvironm
 
     private double temperature;
     private ActorRef<TemperatureSensor.TemperatureCommand> temperatureSensor;
-    ActorContext<TemperatureEnvironment.TemperatureEnvironmentCommand> context = getContext();
+    private ActorContext<TemperatureEnvironment.TemperatureEnvironmentCommand> context = getContext();
     private ActorRef<TemperatureEnvironment.TemperatureEnvironmentCommand> selfRef = context.getSelf();
 
     private final TimerScheduler<TemperatureEnvironmentCommand> temperatureTimeScheduler;

@@ -27,7 +27,6 @@ public class HomeAutomationController extends AbstractBehavior<Void>{
     private ActorRef<WeatherEnvironment.WeatherEnvironmentCommand> weatherEnvironment;
     private ActorRef<InternetEnvironment.InternetEnvironmentCommand> internetEnvironment;
     private ActorRef<FridgeOpticEnvironment.FridgeOpticEnvironmentCommand> fridgeOpticEnvironment;
-    private ActorRef<Void> ui;
 
     public static Behavior<Void> create() {
         return Behaviors.setup(HomeAutomationController::new);
@@ -46,7 +45,7 @@ public class HomeAutomationController extends AbstractBehavior<Void>{
         this.weatherSensor = getContext().spawn(WeatherSensor.create("1", "2", this.blinds), "WeatherSensor");
         this.temperatureEnvironment = getContext().spawn(TemperatureEnvironment.create(this.tempSensor, 23), "TemperatureEnvironment");
         this.weatherEnvironment = getContext().spawn(WeatherEnvironment.create(this.weatherSensor), "WeatherEnvironment");
-        this.ui = getContext().spawn(UI.create(this.tempSensor, this.airCondition, this.mediaStation), "UI");
+        ActorRef<Void> ui = getContext().spawn(UI.create(this.tempSensor, this.airCondition, this.mediaStation, this.fridge), "UI");
 
         getContext().getLog().info("HomeAutomation Application started");
     }

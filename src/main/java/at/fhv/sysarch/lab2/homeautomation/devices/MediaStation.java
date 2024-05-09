@@ -40,14 +40,6 @@ public class MediaStation extends AbstractBehavior<MediaStation.MediaStationComm
         return Behaviors.setup(context -> new MediaStation(context, groupId, deviceId, blinds));
     }
 
-    @Override
-    public Receive<MediaStationCommand> createReceive() {
-        return newReceiveBuilder()
-                .onMessage(ChangeCondition.class, this::turnOnOff)
-                .build();
-    }
-
-
     private Behavior<MediaStationCommand> turnOnOff(ChangeCondition c){
         getContext().getLog().info("MediaStation read command {}", c.isOn.get());
         if (isOn && c.isOn.get()){
@@ -62,6 +54,13 @@ public class MediaStation extends AbstractBehavior<MediaStation.MediaStationComm
             getContext().getLog().info("The movie is started");
         }
         return this;
+    }
+
+    @Override
+    public Receive<MediaStationCommand> createReceive() {
+        return newReceiveBuilder()
+                .onMessage(ChangeCondition.class, this::turnOnOff)
+                .build();
     }
 
 }

@@ -87,7 +87,7 @@ public class OrderProcessManager extends AbstractBehavior<OrderProcessManager.Or
 
         getContext().getLog().info("OrderProcess reading {}", o.order.get());
 
-        this.getContext().ask(
+        getContext().ask(
                 SpaceMemory.RequiredSpace.class,
                 space,
                 timeout,
@@ -102,7 +102,7 @@ public class OrderProcessManager extends AbstractBehavior<OrderProcessManager.Or
                     }
                 });
 
-        this.getContext().ask(
+        getContext().ask(
                 WeightMemory.RequiredWeight.class,
                 weight,
                 timeout,

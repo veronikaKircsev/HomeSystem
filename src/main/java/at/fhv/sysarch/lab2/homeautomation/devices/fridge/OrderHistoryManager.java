@@ -1,5 +1,6 @@
 package at.fhv.sysarch.lab2.homeautomation.devices.fridge;
 
+import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
@@ -33,6 +34,22 @@ public class OrderHistoryManager extends AbstractBehavior<OrderHistoryManager.Or
         return Behaviors.setup(context->new OrderHistoryManager(context, deviceId));
     }
 
+    public static class OrderHistory implements OrderHistoryManagerCommand {
+        public final ActorRef<Response> replyTo;
+
+        public OrderHistory(ActorRef<Response> replyTo) {
+            this.replyTo = replyTo;
+        }
+    }
+
+    public static class Response {
+        public final String result;
+
+        public Response(String result) {
+            this.result = result;
+        }
+    }
+
     private List<Order> order = new ArrayList<>();
     private final String deviceId;
 
@@ -41,6 +58,7 @@ public class OrderHistoryManager extends AbstractBehavior<OrderHistoryManager.Or
     public Receive<OrderHistoryManagerCommand> createReceive() {
         return newReceiveBuilder()
                 .onMessage(SaveOrder.class, this::saveOrder)
+                .onMessage(OrderHistory.class, this::onRequest)
                 .build();
     }
 
@@ -51,5 +69,14 @@ public class OrderHistoryManager extends AbstractBehavior<OrderHistoryManager.Or
         order.add(thisOrder);
         return this;
 
+    }
+
+    private Behavior<OrderHistoryManagerCommand> onRequest(OrderHistory request) {
+        StringBuilder sb = new StringBuilder();
+        for (Order o : order){
+            sb.append(o.toString()).append("\n");
+        }
+        request.replyTo.tell(new Response(sb.toString()));
+        return Behaviors.same();
     }
 }
