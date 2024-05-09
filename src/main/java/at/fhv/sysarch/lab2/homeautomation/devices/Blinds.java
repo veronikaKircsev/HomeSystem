@@ -37,7 +37,7 @@ public class Blinds extends AbstractBehavior<Blinds.BlindsCommand> {
 
     private Behavior<BlindsCommand> readCommand(ChangeCondition m) {
         getContext().getLog().info("Blinds reading {} from {}", m.condition.get(), m.myActuator.get());
-        if (!lastActuator.equals(BlindsActuator.MediaStation) ||
+        if (lastActuator == null || !lastActuator.equals(BlindsActuator.MediaStation) ||
                 (lastActuator.equals(BlindsActuator.MediaStation) && m.myActuator.get().equals(BlindsActuator.MediaStation))
         || (isOpen && lastActuator.equals(BlindsActuator.MediaStation))){
             isOpen = m.condition.get();

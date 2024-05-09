@@ -11,8 +11,6 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.Random;
 
-import static akka.actor.TypedActor.self;
-
 public class WeatherEnvironment extends AbstractBehavior<WeatherEnvironment.WeatherEnvironmentCommand> {
 
 
@@ -27,8 +25,9 @@ public class WeatherEnvironment extends AbstractBehavior<WeatherEnvironment.Weat
     }
 
     private Weather weather;
-    private ActorRef<WeatherSensor.WeatherCommand> weatherTemperatureSensor;
-    private ActorRef<WeatherEnvironment.WeatherEnvironmentCommand> selfRef = self();
+    private ActorRef<WeatherSensor.WeatherCommand> weatherSensor;
+    ActorContext<WeatherEnvironment.WeatherEnvironmentCommand> context = getContext();
+    private ActorRef<WeatherEnvironment.WeatherEnvironmentCommand> selfRef = context.getSelf();
     private final TimerScheduler<WeatherEnvironmentCommand> weatherTimeScheduler;
 
 
@@ -48,7 +47,7 @@ public class WeatherEnvironment extends AbstractBehavior<WeatherEnvironment.Weat
     private WeatherEnvironment(ActorContext<WeatherEnvironmentCommand> context, ActorRef<WeatherSensor.WeatherCommand> weatherSensor,
                         TimerScheduler<WeatherEnvironmentCommand> weatherTimer) {
         super(context);
-        this.weatherTemperatureSensor = weatherSensor;
+        this.weatherSensor = weatherSensor;
         this.weatherTimeScheduler = weatherTimer;
         this.weatherTimeScheduler.startTimerAtFixedRate(new WeatherConditionsChanger(), Duration.ofSeconds(35));
     }
@@ -65,7 +64,7 @@ public class WeatherEnvironment extends AbstractBehavior<WeatherEnvironment.Weat
 
     private Behavior<WeatherEnvironmentCommand> onSetWeather(SetWeather command) {
         this.weather = command.weather.get();
-        getContext().getLog().info("Environment received new {}", weather.toString());
+        getContext().getLog().info("Environment received {}", weather.toString());
         return this;
     }
 
@@ -74,8 +73,9 @@ public class WeatherEnvironment extends AbstractBehavior<WeatherEnvironment.Weat
         Weather[] allWeathers = Weather.values();
         Random random = new Random();
         int randomIndex = random.nextInt(allWeathers.length);
-        getContext().getLog().info("Environment Change Sun to {}", allWeathers[randomIndex].toString());
+        getContext().getLog().info("Environment Change {} to {}", weather, allWeathers[randomIndex].toString());
         selfRef.tell(new WeatherEnvironment.SetWeather(Optional.of(allWeathers[randomIndex])));
+        this.weatherSensor.tell(new WeatherSensor.ChangeWeather(Optional.of(allWeathers[randomIndex])));
         return this;
     }
 

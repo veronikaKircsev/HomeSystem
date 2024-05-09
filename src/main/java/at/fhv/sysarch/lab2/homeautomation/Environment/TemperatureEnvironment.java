@@ -28,7 +28,8 @@ public class TemperatureEnvironment extends AbstractBehavior<TemperatureEnvironm
 
     private double temperature;
     private ActorRef<TemperatureSensor.TemperatureCommand> temperatureSensor;
-    private ActorRef<TemperatureEnvironment.TemperatureEnvironmentCommand> selfRef = self();
+    ActorContext<TemperatureEnvironment.TemperatureEnvironmentCommand> context = getContext();
+    private ActorRef<TemperatureEnvironment.TemperatureEnvironmentCommand> selfRef = context.getSelf();
 
     private final TimerScheduler<TemperatureEnvironmentCommand> temperatureTimeScheduler;
 
@@ -67,7 +68,7 @@ public class TemperatureEnvironment extends AbstractBehavior<TemperatureEnvironm
 
     private Behavior<TemperatureEnvironmentCommand> onSetTemperature(SetTemperature command) {
         this.temperature = command.celsius.get();
-        getContext().getLog().info("TemperatureEnvironment received new {}", temperature);
+        getContext().getLog().info("TemperatureEnvironment received {}", temperature);
         return this;
     }
 

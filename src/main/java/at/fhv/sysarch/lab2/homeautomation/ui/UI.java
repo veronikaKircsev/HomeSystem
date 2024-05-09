@@ -8,6 +8,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import at.fhv.sysarch.lab2.homeautomation.devices.AirCondition;
+import at.fhv.sysarch.lab2.homeautomation.devices.MediaStation;
 import at.fhv.sysarch.lab2.homeautomation.devices.TemperatureSensor;
 
 import java.util.Optional;
@@ -17,18 +18,23 @@ public class UI extends AbstractBehavior<Void> {
 
     private ActorRef<TemperatureSensor.TemperatureCommand> tempSensor;
     private ActorRef<AirCondition.AirConditionCommand> airCondition;
+    private ActorRef<MediaStation.MediaStationCommand> mediaStation;
 
-    public static Behavior<Void> create(ActorRef<TemperatureSensor.TemperatureCommand> tempSensor, ActorRef<AirCondition.AirConditionCommand> airCondition) {
-        return Behaviors.setup(context -> new UI(context, tempSensor, airCondition));
+    public static Behavior<Void> create(ActorRef<TemperatureSensor.TemperatureCommand> tempSensor,
+                                        ActorRef<AirCondition.AirConditionCommand> airCondition
+    , ActorRef<MediaStation.MediaStationCommand> mediaStation) {
+        return Behaviors.setup(context -> new UI(context, tempSensor, airCondition, mediaStation));
     }
 
-    private  UI(ActorContext<Void> context, ActorRef<TemperatureSensor.TemperatureCommand> tempSensor, ActorRef<AirCondition.AirConditionCommand> airCondition) {
+    private  UI(ActorContext<Void> context, ActorRef<TemperatureSensor.TemperatureCommand> tempSensor,
+                ActorRef<AirCondition.AirConditionCommand> airCondition, ActorRef<MediaStation.MediaStationCommand> mediaStation) {
         super(context);
         // TODO: implement actor and behavior as needed
         // TODO: move UI initialization to appropriate place
         this.airCondition = airCondition;
         this.tempSensor = tempSensor;
-        new Thread(() -> { this.runCommandLine(); }).start();
+        this.mediaStation = mediaStation;
+        new Thread(() -> this.runCommandLine()).start();
 
         getContext().getLog().info("UI started");
     }
@@ -55,10 +61,16 @@ public class UI extends AbstractBehavior<Void> {
             // TODO: change input handling
             String[] command = reader.split(" ");
             if(command[0].equals("t")) {
-                this.tempSensor.tell(new TemperatureSensor.ReadTemperature(Optional.of(Double.valueOf(command[1])), type));
+                this.tempSensor.tell(new TemperatureSensor.ReadTemperature(Optional.of(Double.valueOf(command[1])), Optional.of("Celsius")));
             }
             if(command[0].equals("a")) {
                 this.airCondition.tell(new AirCondition.PowerAirCondition(Optional.of(Boolean.valueOf(command[1]))));
+            }
+            if (command[0].equals("m")){
+                boolean com = command[1].equals("y") ? true : false;
+                getContext().getLog().info("com {}", com);
+                this.mediaStation.tell(new MediaStation.ChangeCondition(Optional.of(Boolean.valueOf(com))));
+
             }
             // TODO: process Input
         }
