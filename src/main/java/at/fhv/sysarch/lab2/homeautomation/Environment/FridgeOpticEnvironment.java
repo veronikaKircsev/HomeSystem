@@ -77,6 +77,8 @@ public class FridgeOpticEnvironment extends AbstractBehavior<FridgeOpticEnvironm
             int amount = products.get(p.product.get()) - 1;
             products.put(p.product.get(), amount);
             fridge.tell(new Fridge.Consume(p.product));
+        } else {
+            getContext().getLog().info("The {} not there", p.product.get().getName());
         }
         return this;
     }
