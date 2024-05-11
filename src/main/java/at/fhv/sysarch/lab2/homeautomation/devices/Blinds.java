@@ -42,8 +42,10 @@ public class Blinds extends AbstractBehavior<Blinds.BlindsCommand> {
         || (isOpen && lastActuator.equals(BlindsActuator.MediaStation))){
             isOpen = m.condition.get();
             lastActuator = m.myActuator.get();
+            if(isOpen != m.condition.get()) {
             String message = m.condition.get() ? "Blinds are open by " + lastActuator : "Blinds are closed by " + lastActuator;
             getContext().getLog().info(message);
+            }
         } else {
             getContext().getLog().info("Command {} for {} is not available", m.condition.get(), m.myActuator.get());
         }

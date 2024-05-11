@@ -120,6 +120,7 @@ public class OrderProcessManager extends AbstractBehavior<OrderProcessManager.Or
         if (spaceLeft !=0 && weightSpaceLeft !=0) {
             int countSpace = 0;
             double countedWeight = 0;
+
             for (Product product : o.order.get().keySet()) {
                 int productAmount = o.order.get().get(product);
                 double productsWeight = product.getWeight() * productAmount;
@@ -128,6 +129,7 @@ public class OrderProcessManager extends AbstractBehavior<OrderProcessManager.Or
                 countSpace += productAmount;
                 countedWeight += productsWeight;
             }
+            //check for order
             if (spaceLeft >= countSpace && weightSpaceLeft >= countedWeight){
                 gateway.tell(new Gateway.SendOrder(o.order));
                 orderHistoryManager.tell(new OrderHistoryManager.SaveOrder(o.order));
