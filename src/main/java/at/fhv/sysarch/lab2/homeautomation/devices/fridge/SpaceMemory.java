@@ -80,7 +80,7 @@ public class SpaceMemory extends AbstractBehavior<SpaceMemory.SpaceMemoryCommand
     }
 
     private Behavior<SpaceMemoryCommand> consumeProduct(ConsumeProduct c){
-        getContext().getLog().info("SpaceMemory reading the consume{}", c.value.get());
+        getContext().getLog().info("SpaceMemory reading the consume {}", c.value.get());
         if (c.value != null){
             productCount-=c.value.get();
         }
@@ -88,7 +88,7 @@ public class SpaceMemory extends AbstractBehavior<SpaceMemory.SpaceMemoryCommand
     }
 
     private Behavior<SpaceMemoryCommand> fillUpProduct(FillUpProduct c){
-        getContext().getLog().info("SpaceMemory reading the fillUp{}", c.value.get());
+        getContext().getLog().info("SpaceMemory reading the fillUp {}", c.value.get());
         if (c.value.get() != null){
             productCount+=c.value.get();
         }

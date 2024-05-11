@@ -56,7 +56,7 @@ public class SpaceSensor extends AbstractBehavior<SpaceSensor.SpaceSensorCommand
     }
 
     private Behavior<SpaceSensorCommand> consumeProduct(ConsumeProduct c){
-        getContext().getLog().info("SpaceSensor reading the consume{}", c.product.get().getName());
+        getContext().getLog().info("SpaceSensor reading the consume {}", c.product.get().getName());
         spaceMemory.tell(new SpaceMemory.ConsumeProduct(Optional.of(1)));
         return this;
     }

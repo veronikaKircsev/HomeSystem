@@ -49,7 +49,7 @@ public class WeatherEnvironment extends AbstractBehavior<WeatherEnvironment.Weat
         super(context);
         this.weatherSensor = weatherSensor;
         this.weatherTimeScheduler = weatherTimer;
-        this.weatherTimeScheduler.startTimerAtFixedRate(new WeatherConditionsChanger(), Duration.ofSeconds(35));
+        this.weatherTimeScheduler.startTimerAtFixedRate(new WeatherConditionsChanger(), Duration.ofSeconds(40));
     }
 
     @Override

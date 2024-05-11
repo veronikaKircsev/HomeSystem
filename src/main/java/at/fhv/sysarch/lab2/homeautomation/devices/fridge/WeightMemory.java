@@ -75,14 +75,14 @@ public class WeightMemory extends AbstractBehavior<WeightMemory.WeightMemoryComm
     }
 
     private Behavior<WeightMemoryCommand> consumeProduct(ConsumeProduct c){
-        getContext().getLog().info("WeightMemory reading the consume{} in{}", c.value.get(), c.units.get());
+        getContext().getLog().info("WeightMemory reading the consume {} in {}", c.value.get(), c.units.get());
         if (c.value.get() != null){
             sumWeight-=c.value.get();
         }
         return this;
     }
     private Behavior<WeightMemoryCommand> fillUpProduct(FillUpProduct c){
-        getContext().getLog().info("WeightMemory reading the fillUp{} in{}", c.value.get(), c.units.get());
+        getContext().getLog().info("WeightMemory reading the fillUp {} in {}", c.value.get(), c.units.get());
         if (c.value.get() != null){
             sumWeight+=c.value.get();
         }

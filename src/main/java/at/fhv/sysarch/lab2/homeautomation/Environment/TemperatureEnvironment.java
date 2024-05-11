@@ -53,7 +53,7 @@ public class TemperatureEnvironment extends AbstractBehavior<TemperatureEnvironm
         this.temperatureSensor = tempSensor;
         this.temperatureTimeScheduler = tempTimer;
         this.temperature = startingTemperature;
-        this.temperatureTimeScheduler.startTimerAtFixedRate(new TemperatureChanger(), Duration.ofSeconds(5));
+        this.temperatureTimeScheduler.startTimerAtFixedRate(new TemperatureChanger(), Duration.ofSeconds(30));
     }
 
     @Override
@@ -76,6 +76,8 @@ public class TemperatureEnvironment extends AbstractBehavior<TemperatureEnvironm
         Random random = new Random();
         double randomValue = random.nextDouble() * 2 - 1;
         this.temperature += randomValue;
+        double roundedValue = temperature >= 0 ? Math.floor(temperature * 100) / 100 : Math.ceil(temperature * 100) / 100;
+        temperature = roundedValue;
         getContext().getLog().info("TemperatureEnvironment received {}", temperature);
         this.temperatureSensor.tell(new TemperatureSensor.ReadTemperature(Optional.of(temperature), Optional.of("Celsius")));
         selfRef.tell(new TemperatureEnvironment.SetTemperature(Optional.of(temperature)));

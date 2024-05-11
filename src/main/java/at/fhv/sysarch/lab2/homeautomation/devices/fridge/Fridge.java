@@ -121,7 +121,7 @@ public class Fridge extends AbstractBehavior<Fridge.FridgeCommand> {
     }
 
     private Behavior<FridgeCommand> consume(Consume c){
-        getContext().getLog().info("Fridge reading the consume{}", c.product.get().getName());
+        getContext().getLog().info("Fridge reading the consume {}", c.product.get().getName());
         spaceSensor.tell(new SpaceSensor.ConsumeProduct(Optional.of(c.product.get())));
         weightSensor.tell(new WeightSensor.ConsumeProduct(Optional.of(c.product.get())));
         opticSensor.tell(new OpticSensor.ConsumeProduct(Optional.of(c.product.get())));
@@ -129,7 +129,7 @@ public class Fridge extends AbstractBehavior<Fridge.FridgeCommand> {
     }
 
     private Behavior<FridgeCommand> order(Order o){
-        getContext().getLog().info("Fridge reading the order{}", o.products.get());
+        getContext().getLog().info("Fridge reading the order {}", o.products.get());
         Map<Product, Integer> productOrder = new HashMap<>();
         int amount = 0;
         for (Product product: o.products.get()) {
@@ -145,7 +145,7 @@ public class Fridge extends AbstractBehavior<Fridge.FridgeCommand> {
     }
 
     private Behavior<FridgeCommand> receiveProducts(ReceiveProducts r){
-        getContext().getLog().info("Fridge reading the received products{}", r.products.get());
+        getContext().getLog().info("Fridge reading the received products {}", r.products.get());
         weightSensor.tell(new WeightSensor.FillUpProduct(Optional.of(r.products.get())));
         spaceSensor.tell(new SpaceSensor.FillUpProduct(Optional.of(r.products.get())));
         opticSensor.tell(new OpticSensor.FillUpProduct(Optional.of(r.products.get())));

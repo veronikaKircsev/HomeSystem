@@ -54,20 +54,20 @@ public class WeightSensor extends AbstractBehavior<WeightSensor.WeightSensorComm
     }
 
     private Behavior<WeightSensorCommand> consumeProduct(ConsumeProduct c){
-        getContext().getLog().info("WeightSensor reading the consume{}", c.product.get().getName());
-        weightMemory.tell(new WeightMemory.ConsumeProduct(Optional.of(c.product.get().getWeight()), Optional.of("gramms")));
+        getContext().getLog().info("WeightSensor reading the consume {}", c.product.get().getName());
+        weightMemory.tell(new WeightMemory.ConsumeProduct(Optional.of(c.product.get().getWeightInKg()), Optional.of("gramms")));
 
         return this;
     }
 
     private Behavior<WeightSensorCommand> fillUpProduct(FillUpProduct p){
-        getContext().getLog().info("Weight sensor reading the products{}", p.products.get());
+        getContext().getLog().info("Weight sensor reading the products {}", p.products.get().keySet());
         double sumWeight = 0;
         for (Product product : p.products.get().keySet()){
-            getContext().getLog().info("WeightSensor reading the new product{}", product.getName());
-            sumWeight+= (product.getWeight() * p.products.get().get(product));
+            sumWeight+= (product.getWeightInKg() * p.products.get().get(product));
         }
-        weightMemory.tell(new WeightMemory.FillUpProduct(Optional.of(sumWeight), Optional.of("gramms")));
+        double sumWeightRounded = Math.floor(sumWeight * 100) /100;
+        weightMemory.tell(new WeightMemory.FillUpProduct(Optional.of(sumWeightRounded), Optional.of("gramms")));
 
         return this;
     }

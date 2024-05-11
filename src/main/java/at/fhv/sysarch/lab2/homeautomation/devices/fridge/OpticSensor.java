@@ -56,13 +56,13 @@ public class OpticSensor extends AbstractBehavior<OpticSensor.OpticSensorCommand
     }
 
     private Behavior<OpticSensorCommand> consumeProduct(ConsumeProduct c){
-        getContext().getLog().info("OpticSensor reading the consume{}", c.product.get());
+        getContext().getLog().info("OpticSensor reading the consume {}", c.product.get());
         productMemory.tell(new ProductListMemory.ConsumeProduct(Optional.of(c.product.get()), Optional.of(1)));
         return this;
     }
 
     private Behavior<OpticSensorCommand> fillUpProduct(FillUpProduct p){
-            getContext().getLog().info("OpticSensor reading the new product{}");
+            getContext().getLog().info("OpticSensor reading the new product {}", p.products.get());
             productMemory.tell(new ProductListMemory.FillUpProduct(p.products));
 
         return this;

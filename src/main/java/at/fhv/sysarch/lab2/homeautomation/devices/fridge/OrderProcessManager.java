@@ -123,7 +123,7 @@ public class OrderProcessManager extends AbstractBehavior<OrderProcessManager.Or
 
             for (Product product : o.order.get().keySet()) {
                 int productAmount = o.order.get().get(product);
-                double productsWeight = product.getWeight() * productAmount;
+                double productsWeight = product.getWeightInKg() * productAmount;
                 getContext().getLog().info("OrderProcessor reading {} with sumWeight {} and amount {}", product.getName(),
                         productsWeight, productAmount);
                 countSpace += productAmount;
