@@ -2,13 +2,11 @@ package at.fhv.sysarch.lab2.homeautomation.Environment;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
-import akka.actor.typed.javadsl.AbstractBehavior;
-import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.Behaviors;
-import akka.actor.typed.javadsl.Receive;
+import akka.actor.typed.javadsl.*;
 import at.fhv.sysarch.lab2.homeautomation.devices.fridge.Fridge;
 import at.fhv.sysarch.lab2.homeautomation.products.Product;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -33,18 +31,29 @@ public class FridgeOpticEnvironment extends AbstractBehavior<FridgeOpticEnvironm
         }
     }
 
+    public static class ShouldFill implements FridgeOpticEnvironmentCommand{
+        public ShouldFill(){}
+    }
+
     private Map<Product, Integer> products = new HashMap<>();
     private ActorRef<Fridge.FridgeCommand> fridge;
+    private ActorRef<InternetEnvironment.InternetEnvironmentCommand> internet;
+    private final TimerScheduler<FridgeOpticEnvironmentCommand> timeScheduler;
+    private final Duration timeout = Duration.ofSeconds(3);
 
 
-    public FridgeOpticEnvironment(ActorContext<FridgeOpticEnvironmentCommand> context, ActorRef<Fridge.FridgeCommand> fridge) {
+    public FridgeOpticEnvironment(ActorContext<FridgeOpticEnvironmentCommand> context, ActorRef<Fridge.FridgeCommand> fridge,
+                                  ActorRef<InternetEnvironment.InternetEnvironmentCommand> internet, TimerScheduler<FridgeOpticEnvironmentCommand> timeScheduler) {
         super(context);
         this.fridge = fridge;
+        this.internet = internet;
+        this.timeScheduler = timeScheduler;
+        this.timeScheduler.startTimerAtFixedRate(new ShouldFill(), Duration.ofSeconds(30));
         getContext().getLog().info("FridgeOpticEnvironment is running");
     }
 
-    public static Behavior<FridgeOpticEnvironmentCommand> create(ActorRef<Fridge.FridgeCommand> fridge){
-        return Behaviors.setup(context-> new FridgeOpticEnvironment(context, fridge));
+    public static Behavior<FridgeOpticEnvironmentCommand> create(ActorRef<Fridge.FridgeCommand> fridge, ActorRef<InternetEnvironment.InternetEnvironmentCommand> internet ){
+        return Behaviors.setup(context-> Behaviors.withTimers(timers->new FridgeOpticEnvironment(context, fridge, internet, timers)));
 
     }
 
@@ -54,12 +63,18 @@ public class FridgeOpticEnvironment extends AbstractBehavior<FridgeOpticEnvironm
         return newReceiveBuilder()
                 .onMessage(PlaceProducts.class, this::placeProducts)
                 .onMessage(ConsumeProducts.class, this::consumeProducts)
+                .onMessage(ShouldFill.class, this::shouldFill)
                 .build();
     }
 
+
+
     private Behavior<FridgeOpticEnvironmentCommand> placeProducts(PlaceProducts p) {
-        getContext().getLog().info("FridgeOpticEnvironment get place product command {}", p.products.get());
+        getContext().getLog().info("FridgeOpticEnvironment place product command {}", p.products.get());
         for (Product product : p.products.get().keySet()){
+            if (products.isEmpty()){
+                products = p.products.get();
+            }
             if (products.containsKey(product)){
                 products.put(product, products.get(product) + p.products.get().get(product) );
             } else {
@@ -80,6 +95,23 @@ public class FridgeOpticEnvironment extends AbstractBehavior<FridgeOpticEnvironm
         } else {
             getContext().getLog().info("The {} not there", p.product.get().getName());
         }
+        return this;
+    }
+    private Behavior<FridgeOpticEnvironmentCommand> shouldFill(ShouldFill f){
+        getContext().ask(
+               InternetEnvironment.RequiredOrder.class,
+                internet,
+                timeout,
+                (ActorRef<InternetEnvironment.RequiredOrder> ref) -> new InternetEnvironment.ReadOrder(ref),
+                (response, throwable) -> {
+                    if (response != null) {
+                        getContext().getLog().info("Request get {}", response.order);
+                        return new PlaceProducts(response.order);
+                    } else {
+                        getContext().getLog().info("Request failed");
+                    return null;
+                    }
+                });
         return this;
     }
 }

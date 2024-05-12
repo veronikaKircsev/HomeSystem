@@ -38,9 +38,9 @@ public class HomeAutomationController extends AbstractBehavior<Void>{
         this.airCondition = getContext().spawn(AirCondition.create("2", "1"), "AirCondition");
         this.blinds = getContext().spawn(Blinds.create("2", "2"), "Blinds");
         this.mediaStation = getContext().spawn(MediaStation.create("2", "3", this.blinds), "MediaStation");
-        this.internetEnvironment = getContext().spawn(InternetEnvironment.create("1", "4", this.fridgeOpticEnvironment), "InternetEnvironment");
+        this.internetEnvironment = getContext().spawn(InternetEnvironment.create("1", "4"), "InternetEnvironment");
         this.fridge = getContext().spawn(Fridge.create("2", "4", 40, 400, this.internetEnvironment), "Fridge");
-        this.fridgeOpticEnvironment = getContext().spawn(FridgeOpticEnvironment.create(this.fridge), "FridgeOpticEnvironment");
+        this.fridgeOpticEnvironment = getContext().spawn(FridgeOpticEnvironment.create(this.fridge, this.internetEnvironment), "FridgeOpticEnvironment");
         this.tempSensor = getContext().spawn(TemperatureSensor.create(this.airCondition, "1", "1"), "TemperatureSensor");
         this.weatherSensor = getContext().spawn(WeatherSensor.create("1", "2", this.blinds), "WeatherSensor");
         this.temperatureEnvironment = getContext().spawn(TemperatureEnvironment.create(this.tempSensor, 23), "TemperatureEnvironment");

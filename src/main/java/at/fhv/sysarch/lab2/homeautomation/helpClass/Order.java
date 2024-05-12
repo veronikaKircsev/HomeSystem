@@ -20,4 +20,8 @@ public class Order {
     public void setOrder(HashMap<Product, Integer> order) {
         this.order = order;
     }
+
+    public static int getOrderCount() {
+        return orderCount;
+    }
 }

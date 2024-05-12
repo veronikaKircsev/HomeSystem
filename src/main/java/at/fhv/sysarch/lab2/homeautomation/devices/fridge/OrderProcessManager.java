@@ -6,6 +6,7 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
+import at.fhv.sysarch.lab2.homeautomation.Environment.TemperatureEnvironment;
 import at.fhv.sysarch.lab2.homeautomation.products.Product;
 
 import java.time.Duration;
@@ -30,17 +31,28 @@ public class OrderProcessManager extends AbstractBehavior<OrderProcessManager.Or
 
     public static final class SetSpace implements OrderCommand{
         final Optional<Integer> value;
+        final Optional<Map<Product, Integer>> order;
 
-        public SetSpace(Optional<Integer> value) {
+        public SetSpace(Optional<Integer> value, Optional<Map<Product, Integer>> order) {
             this.value = value;
+            this.order = order;
         }
     }
 
     public static final class SetWeight implements OrderCommand{
         final Optional<Double> value;
+        final Optional<Map<Product, Integer>> order;
 
-        public SetWeight(Optional<Double> value) {
+        public SetWeight(Optional<Double> value, Optional<Map<Product, Integer>> order) {
             this.value = value;
+            this.order = order;
+        }
+    }
+
+    public static final class TryOrder implements OrderCommand{
+        final Optional<Map<Product, Integer>> order;
+        public TryOrder(Optional<Map<Product, Integer>> order) {
+            this.order = order;
         }
     }
 
@@ -52,6 +64,8 @@ public class OrderProcessManager extends AbstractBehavior<OrderProcessManager.Or
     private int spaceLeft;
     private double weightSpaceLeft;
     private final String deviceId;
+    private ActorContext<OrderProcessManager.OrderCommand> context = getContext();
+    private ActorRef<OrderProcessManager.OrderCommand> selfRef = context.getSelf();
 
 
     public OrderProcessManager(ActorContext<OrderCommand> context, ActorRef<SpaceMemory.SpaceMemoryCommand> space,
@@ -79,11 +93,12 @@ public class OrderProcessManager extends AbstractBehavior<OrderProcessManager.Or
         return newReceiveBuilder()
                 .onMessage(SetSpace.class, this::setSpace)
                 .onMessage(SetWeight.class, this::setWeight)
-                .onMessage(StartOrder.class, this::processOrder)
+                .onMessage(StartOrder.class, this::processFreePlaces)
+                .onMessage(TryOrder.class, this::tryOrder)
                 .build();
     }
 
-    private Behavior<OrderCommand> processOrder(StartOrder o) {
+    private Behavior<OrderCommand> processFreePlaces(StartOrder o) {
 
         getContext().getLog().info("OrderProcess reading {}", o.order.get());
 
@@ -95,10 +110,10 @@ public class OrderProcessManager extends AbstractBehavior<OrderProcessManager.Or
                 (response, throwable) -> {
                     if (response != null) {
                         getContext().getLog().info("Request get {}", response.value);
-                        return new SetSpace(response.value);
+                        return new SetSpace(response.value, o.order);
                     } else {
                         getContext().getLog().info("Request failed");
-                        return new SetSpace(Optional.empty());
+                        return new SetSpace(Optional.empty(), o.order);
                     }
                 });
 
@@ -110,19 +125,38 @@ public class OrderProcessManager extends AbstractBehavior<OrderProcessManager.Or
                 (response, throwable) -> {
                     if (response != null) {
                         getContext().getLog().info("Request get {}", response.value);
-                        return new SetWeight(response.value);
+                        return new SetWeight(response.value, o.order);
                     } else {
                         getContext().getLog().info("Request failed");
-                        return new SetWeight(Optional.empty());
+                        return new SetWeight(Optional.empty(), o.order);
                     }
                 });
 
+        return this;
+    }
+
+    private Behavior<OrderCommand> setSpace(SetSpace s) {
+        getContext().getLog().info("Setting space{}", s.value.get());
+        spaceLeft = s.value.get();
+        selfRef.tell(new TryOrder(s.order));
+        return this;
+    }
+
+    private Behavior<OrderCommand> setWeight(SetWeight s) {
+        getContext().getLog().info("Setting weight {}", s.value.get());
+        weightSpaceLeft = s.value.get();
+        selfRef.tell(new TryOrder(s.order));
+        return this;
+    }
+
+    private Behavior<OrderCommand> tryOrder(TryOrder o) {
         if (spaceLeft !=0 && weightSpaceLeft !=0) {
             int countSpace = 0;
             double countedWeight = 0;
 
             for (Product product : o.order.get().keySet()) {
                 int productAmount = o.order.get().get(product);
+                double weight = product.getWeightInKg();
                 double productsWeight = product.getWeightInKg() * productAmount;
                 getContext().getLog().info("OrderProcessor reading {} with sumWeight {} and amount {}", product.getName(),
                         productsWeight, productAmount);
@@ -141,16 +175,6 @@ public class OrderProcessManager extends AbstractBehavior<OrderProcessManager.Or
             weightSpaceLeft = 0;
         }
 
-        return this;
-    }
-
-    private Behavior<OrderCommand> setSpace(SetSpace s) {
-        spaceLeft = s.value.get();
-        return this;
-    }
-
-    private Behavior<OrderCommand> setWeight(SetWeight s) {
-        weightSpaceLeft = s.value.get();
         return this;
     }
 

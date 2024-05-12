@@ -50,8 +50,7 @@ public class UI extends AbstractBehavior<Void> {
                 ActorRef<WeatherEnvironment.WeatherEnvironmentCommand> weatherEnvironment,
                 ActorRef<WeatherSensor.WeatherCommand> weatherSensor, ActorRef<Blinds.BlindsCommand> blinds) {
         super(context);
-        // TODO: implement actor and behavior as needed
-        // TODO: move UI initialization to appropriate place
+
         this.airCondition = airCondition;
         this.tempSensor = tempSensor;
         this.mediaStation = mediaStation;
@@ -110,7 +109,7 @@ public class UI extends AbstractBehavior<Void> {
             // implement ordering by fridge
             if (command[0].equals("order")){
                 List<Product> productsOrder = new ArrayList<>();
-                for (int i = 0; i < command.length; i++){
+                for (int i = 1; i < command.length; i++){
                     Product product;
                         try {
                         product = setProduct(command[i]);
@@ -122,7 +121,7 @@ public class UI extends AbstractBehavior<Void> {
                 this.fridge.tell(new Fridge.Order(Optional.of(productsOrder)));
             }
             // implement set weather by environment
-            if (command[0].equalsIgnoreCase("setWeatherE")){
+            if (command[0].equalsIgnoreCase("setWE")){
                 Weather weather = null;
                 try {
                     weather = setWeather(command[1]);
@@ -134,11 +133,11 @@ public class UI extends AbstractBehavior<Void> {
                 }
             }
             //implement set temperature by environment
-            if (command[0].equalsIgnoreCase("setTemperatureE")){
+            if (command[0].equalsIgnoreCase("setTE")){
                 this.temperatureEnvironment.tell(new TemperatureEnvironment.SetTemperature(Optional.of(Double.valueOf(command[1]))));
             }
             //implement set sensor daten by weather sensor
-            if (command[0].equalsIgnoreCase("setWeatherS")){
+            if (command[0].equalsIgnoreCase("setWS")){
                 Weather weather = null;
                 try {
                     weather = setWeather(command[1]);
@@ -158,9 +157,9 @@ public class UI extends AbstractBehavior<Void> {
 
 
 
-            // set sensor daten by temperature sensor
+            //set sensor daten by temperature sensor
             // it should be better it takes a command plus a temperature
-            if(command[0].equals("setTemperatureS")) {
+            if(command[0].equals("setTS")) {
                 this.tempSensor.tell(new TemperatureSensor.ReadTemperature(Optional.of(Double.valueOf(command[1])), Optional.of("Celsius")));
             }
 
@@ -210,7 +209,6 @@ public class UI extends AbstractBehavior<Void> {
                 product = new Vegetables();
                 break;
             default:
-                System.out.println("not there");
                 break;
         }
         return product;

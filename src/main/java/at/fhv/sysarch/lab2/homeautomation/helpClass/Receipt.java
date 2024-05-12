@@ -1,11 +1,12 @@
 package at.fhv.sysarch.lab2.homeautomation.helpClass;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Receipt {
 
     private static int receiptNumber = 0;
-    private List<ProductReceipt> products;
+    private List<ProductReceipt> products = new ArrayList<ProductReceipt>();
     private double totalPrice;
     private int totalAmount;
 

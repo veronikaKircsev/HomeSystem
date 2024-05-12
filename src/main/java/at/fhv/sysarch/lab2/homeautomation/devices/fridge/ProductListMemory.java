@@ -80,11 +80,13 @@ public class ProductListMemory extends AbstractBehavior<ProductListMemory.Produc
                 , c.number.get());
         int amount;
         if (productList.get(c.product.get())!= 0) {
+            getContext().getLog().info("Product will be taken {}", c.product.get().getName());
             amount = productList.get(c.product.get());
             amount -= c.number.get();
             if (amount == 0) {
                 Map<Product, Integer> o = new HashMap<>();
                 o.put(c.product.get(), 3);
+                getContext().getLog().info("Order started {} ", c.product.get().getName());
                 order.tell(new OrderProcessManager.StartOrder(Optional.of(o)));
                 }
             productList.put(c.product.get(), amount);
