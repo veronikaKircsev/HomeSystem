@@ -8,7 +8,6 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import at.fhv.sysarch.lab2.homeautomation.products.Product;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -40,6 +39,7 @@ public class OpticSensor extends AbstractBehavior<OpticSensor.OpticSensorCommand
         super(context);
         this.deviceId = deviceId;
         this.productMemory = productMemory;
+        getContext().getLog().info("OpticSensor is running");
     }
 
     public static Behavior<OpticSensorCommand> create(String deviceId, ActorRef<ProductListMemory.ProductProcessCommand> productMemory) {
@@ -56,13 +56,13 @@ public class OpticSensor extends AbstractBehavior<OpticSensor.OpticSensorCommand
     }
 
     private Behavior<OpticSensorCommand> consumeProduct(ConsumeProduct c){
-        getContext().getLog().info("OpticSensor reading the consume {}", c.product.get());
+        getContext().getLog().debug("OpticSensor reading the consume {}", c.product.get());
         productMemory.tell(new ProductListMemory.ConsumeProduct(Optional.of(c.product.get()), Optional.of(1)));
         return this;
     }
 
     private Behavior<OpticSensorCommand> fillUpProduct(FillUpProduct p){
-            getContext().getLog().info("OpticSensor reading the new product {}", p.products.get());
+            getContext().getLog().debug("OpticSensor reading the new product {}", p.products.get());
             productMemory.tell(new ProductListMemory.FillUpProduct(p.products));
 
         return this;

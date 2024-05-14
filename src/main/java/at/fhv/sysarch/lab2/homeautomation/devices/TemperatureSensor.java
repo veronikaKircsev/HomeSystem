@@ -52,14 +52,14 @@ public class TemperatureSensor extends AbstractBehavior<TemperatureSensor.Temper
     }
 
     private Behavior<TemperatureCommand> onReadTemperature(ReadTemperature r) {
-        getContext().getLog().info("TemperatureSensor received {} - {}", r.value.get(), r.unit.get());
+        getContext().getLog().debug("TemperatureSensor received {} - {}", r.value.get(), r.unit.get());
 
         this.airCondition.tell(new AirCondition.EnrichedTemperature(r.value, Optional.of("Celsius")));
         return this;
     }
 
     private TemperatureSensor onPostStop() {
-        getContext().getLog().info("TemperatureSensor actor {}-{} stopped", groupId, deviceId);
+        getContext().getLog().debug("TemperatureSensor actor {}-{} stopped", groupId, deviceId);
         return this;
     }
 

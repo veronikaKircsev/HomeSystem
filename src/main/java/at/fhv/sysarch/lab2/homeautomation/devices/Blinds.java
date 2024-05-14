@@ -36,7 +36,7 @@ public class Blinds extends AbstractBehavior<Blinds.BlindsCommand> {
     }
 
     private Behavior<BlindsCommand> readCommand(ChangeCondition m) {
-        getContext().getLog().info("Blinds reading {} from {}", m.condition.get(), m.myActuator.get());
+        getContext().getLog().debug("Blinds reading {} from {}", m.condition.get(), m.myActuator.get());
         if (lastActuator == null || !lastActuator.equals(BlindsActuator.MediaStation) ||
                 (lastActuator.equals(BlindsActuator.MediaStation) && m.myActuator.get().equals(BlindsActuator.MediaStation))
         || (isOpen && lastActuator.equals(BlindsActuator.MediaStation))){
@@ -44,10 +44,10 @@ public class Blinds extends AbstractBehavior<Blinds.BlindsCommand> {
             lastActuator = m.myActuator.get();
             if(isOpen != m.condition.get()) {
             String message = m.condition.get() ? "Blinds are open by " + lastActuator : "Blinds are closed by " + lastActuator;
-            getContext().getLog().info(message);
+            getContext().getLog().debug(message);
             }
         } else {
-            getContext().getLog().info("Command {} for {} is not available", m.condition.get(), m.myActuator.get());
+            getContext().getLog().debug("Command {} for {} is not available", m.condition.get(), m.myActuator.get());
         }
         return this;
     }

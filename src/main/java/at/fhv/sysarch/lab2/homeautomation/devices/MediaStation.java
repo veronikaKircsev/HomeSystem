@@ -41,17 +41,17 @@ public class MediaStation extends AbstractBehavior<MediaStation.MediaStationComm
     }
 
     private Behavior<MediaStationCommand> turnOnOff(ChangeCondition c){
-        getContext().getLog().info("MediaStation read command {}", c.isOn.get());
+        getContext().getLog().debug("MediaStation read command {}", c.isOn.get());
         if (isOn && c.isOn.get()){
-            getContext().getLog().info("Sorry a movie is going");
+            getContext().getLog().debug("Sorry a movie is going");
         } else if (isOn && !c.isOn.get()){
             isOn = c.isOn.get();
             blinds.tell(new Blinds.ChangeCondition(Optional.of(true), Optional.of(BlindsActuator.MediaStation)));
-            getContext().getLog().info("The movie is finished");
+            getContext().getLog().debug("The movie is finished");
         } else {
             isOn = c.isOn.get();
             blinds.tell(new Blinds.ChangeCondition(Optional.of(false), Optional.of(BlindsActuator.MediaStation)));
-            getContext().getLog().info("The movie is started");
+            getContext().getLog().debug("The movie is started");
         }
         return this;
     }

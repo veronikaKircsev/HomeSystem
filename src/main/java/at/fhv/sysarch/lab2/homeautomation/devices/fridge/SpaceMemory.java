@@ -6,7 +6,6 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
-import at.fhv.sysarch.lab2.homeautomation.products.Product;
 
 import java.util.Optional;
 
@@ -56,6 +55,7 @@ public class SpaceMemory extends AbstractBehavior<SpaceMemory.SpaceMemoryCommand
         super(context);
         this.maxProduct = maxProduct;
         this.deviceId = deviceId;
+        getContext().getLog().info("SpaceMemory is running");
     }
 
     public static Behavior<SpaceMemory.SpaceMemoryCommand> create(int maxProduct, String deviceId) {
@@ -74,13 +74,13 @@ public class SpaceMemory extends AbstractBehavior<SpaceMemory.SpaceMemoryCommand
 
 
     private Behavior<SpaceMemoryCommand> onRequiredSpace(ReadSpace r){
-        getContext().getLog().info("SpaceMemory read request {}", r.replyTo);
+        getContext().getLog().debug("SpaceMemory read request {}", r.replyTo);
         r.replyTo.tell(new RequiredSpace(Optional.of(maxProduct-productCount)));
         return this;
     }
 
     private Behavior<SpaceMemoryCommand> consumeProduct(ConsumeProduct c){
-        getContext().getLog().info("SpaceMemory reading the consume {}", c.value.get());
+        getContext().getLog().debug("SpaceMemory reading the consume {}", c.value.get());
         if (c.value != null){
             productCount-=c.value.get();
         }
@@ -88,7 +88,7 @@ public class SpaceMemory extends AbstractBehavior<SpaceMemory.SpaceMemoryCommand
     }
 
     private Behavior<SpaceMemoryCommand> fillUpProduct(FillUpProduct c){
-        getContext().getLog().info("SpaceMemory reading the fillUp {}", c.value.get());
+        getContext().getLog().debug("SpaceMemory reading the fillUp {}", c.value.get());
         if (c.value.get() != null){
             productCount+=c.value.get();
         }

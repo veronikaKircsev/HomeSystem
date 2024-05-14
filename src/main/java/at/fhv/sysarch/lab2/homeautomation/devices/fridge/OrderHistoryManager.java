@@ -63,7 +63,7 @@ public class OrderHistoryManager extends AbstractBehavior<OrderHistoryManager.Or
     }
 
     private Behavior<OrderHistoryManagerCommand> saveOrder(SaveOrder o) {
-        getContext().getLog().info("Saving order started {}", o.order.get());
+        getContext().getLog().debug("Saving order started {}", o.order.get());
         Order thisOrder = new Order();
         thisOrder.setOrder((HashMap<Product, Integer>) o.order.get());
         order.add(thisOrder);
@@ -72,6 +72,7 @@ public class OrderHistoryManager extends AbstractBehavior<OrderHistoryManager.Or
     }
 
     private Behavior<OrderHistoryManagerCommand> onRequest(OrderHistory request) {
+        getContext().getLog().debug("OrderHistoryManager read request");
         StringBuilder sb = new StringBuilder();
         for (Order o : order){
             sb.append(o.getOrderCount()).append("\n");

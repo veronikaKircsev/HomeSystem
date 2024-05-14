@@ -52,7 +52,7 @@ public class WeatherSensor extends AbstractBehavior<WeatherSensor.WeatherCommand
     }
 
     private Behavior<WeatherCommand> onReadWeather(ChangeWeather r) {
-        getContext().getLog().info("WeatherSensor received {}", r.weather.get());
+        getContext().getLog().debug("WeatherSensor received {}", r.weather.get());
         if (!r.weather.get().equals(Weather.SUNNY)) {
             this.blinds.tell(new Blinds.ChangeCondition(Optional.of(true), Optional.of(BlindsActuator.WeatherSensor)));
         } else {
@@ -64,7 +64,7 @@ public class WeatherSensor extends AbstractBehavior<WeatherSensor.WeatherCommand
 
 
     private WeatherSensor onPostStop() {
-        getContext().getLog().info("WeatherSensor actor {}-{} stopped", groupId, deviceId);
+        getContext().getLog().debug("WeatherSensor actor {}-{} stopped", groupId, deviceId);
         return this;
     }
 

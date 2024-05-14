@@ -38,6 +38,7 @@ public class WeightSensor extends AbstractBehavior<WeightSensor.WeightSensorComm
         super(context);
         this.deviceId = deviceId;
         this.weightMemory = weightMemory;
+        getContext().getLog().info("WeightSensor is running");
     }
 
     public static Behavior<WeightSensorCommand> create(String deviceId, ActorRef<WeightMemory.WeightMemoryCommand> weightMemory) {
@@ -54,14 +55,14 @@ public class WeightSensor extends AbstractBehavior<WeightSensor.WeightSensorComm
     }
 
     private Behavior<WeightSensorCommand> consumeProduct(ConsumeProduct c){
-        getContext().getLog().info("WeightSensor reading the consume {}", c.product.get().getName());
+        getContext().getLog().debug("WeightSensor reading the consume {}", c.product.get().getName());
         weightMemory.tell(new WeightMemory.ConsumeProduct(Optional.of(c.product.get().getWeightInKg()), Optional.of("gramms")));
 
         return this;
     }
 
     private Behavior<WeightSensorCommand> fillUpProduct(FillUpProduct p){
-        getContext().getLog().info("Weight sensor reading the products {}", p.products.get().keySet());
+        getContext().getLog().debug("Weight sensor reading the products {}", p.products.get().keySet());
         double sumWeight = 0;
         for (Product product : p.products.get().keySet()){
             sumWeight+= (product.getWeightInKg() * p.products.get().get(product));

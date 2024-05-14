@@ -59,12 +59,12 @@ public class AirCondition extends AbstractBehavior<AirCondition.AirConditionComm
 
 
     private Behavior<AirConditionCommand> onReadTemperature(EnrichedTemperature r) {
-        getContext().getLog().info("Aircondition reading {}", r.value.get());
+        getContext().getLog().debug("Aircondition reading {}", r.value.get());
         if(r.value.get() > defaultTemperature) {
-            getContext().getLog().info("Aircondition active");
+            getContext().getLog().debug("Aircondition active");
             this.active = true;
         } else {
-            getContext().getLog().info("Aircondition deactivated");
+            getContext().getLog().debug("Aircondition deactivated");
             this.active =  false;
         }
 
@@ -72,7 +72,7 @@ public class AirCondition extends AbstractBehavior<AirCondition.AirConditionComm
     }
 
     private Behavior<AirConditionCommand> onPowerAirConditionOn(PowerAirCondition r) {
-        getContext().getLog().info("Turning Aircondition to {}", r.value);
+        getContext().getLog().debug("Turning Aircondition to {}", r.value);
 
         if(r.value.get() == true) {
             return Behaviors.receive(AirConditionCommand.class)
@@ -85,7 +85,7 @@ public class AirCondition extends AbstractBehavior<AirCondition.AirConditionComm
     }
 
     private Behavior<AirConditionCommand> onPowerAirConditionOff(PowerAirCondition r) {
-        getContext().getLog().info("Turning Aircondition to {}", r.value);
+        getContext().getLog().debug("Turning Aircondition to {}", r.value);
         if(r.value.get() == false) {
             return this.powerOff();
         }
@@ -101,7 +101,7 @@ public class AirCondition extends AbstractBehavior<AirCondition.AirConditionComm
     }
 
     private AirCondition onPostStop() {
-        getContext().getLog().info("TemperatureSensor actor {}-{} stopped", groupId, deviceId);
+        getContext().getLog().debug("TemperatureSensor actor {}-{} stopped", groupId, deviceId);
         return this;
     }
 }

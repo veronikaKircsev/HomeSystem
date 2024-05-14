@@ -9,7 +9,6 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import at.fhv.sysarch.lab2.homeautomation.products.Product;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -37,6 +36,7 @@ public class SpaceSensor extends AbstractBehavior<SpaceSensor.SpaceSensorCommand
         super(context);
         this.deviceId = deviceId;
         this.spaceMemory = spaceMemory;
+        getContext().getLog().info("SpaceSensor is running");
     }
 
     public static Behavior<SpaceSensorCommand> create(String deviceId, ActorRef<SpaceMemory.SpaceMemoryCommand> spaceMemory) {
@@ -56,13 +56,13 @@ public class SpaceSensor extends AbstractBehavior<SpaceSensor.SpaceSensorCommand
     }
 
     private Behavior<SpaceSensorCommand> consumeProduct(ConsumeProduct c){
-        getContext().getLog().info("SpaceSensor reading the consume {}", c.product.get().getName());
+        getContext().getLog().debug("SpaceSensor reading the consume {}", c.product.get().getName());
         spaceMemory.tell(new SpaceMemory.ConsumeProduct(Optional.of(1)));
         return this;
     }
 
     private Behavior<SpaceSensorCommand> fillUpProduct(FillUpProduct p){
-            getContext().getLog().info("SpaceSensor reading the new products {}", p.products.get().toString());
+            getContext().getLog().debug("SpaceSensor reading the new products {}", p.products.get().toString());
         int sum = 0;
         for (Integer i : p.products.get().values()){
             sum += i;

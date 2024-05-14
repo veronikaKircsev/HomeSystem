@@ -24,4 +24,12 @@ public class Order {
     public static int getOrderCount() {
         return orderCount;
     }
+
+    @Override
+    public String toString() {
+        return "Order{" +
+                "orderCount=" + orderCount +
+                "order=" + order +
+                '}';
+    }
 }

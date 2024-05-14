@@ -6,7 +6,6 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
-import at.fhv.sysarch.lab2.homeautomation.devices.fridge.SpaceMemory;
 import at.fhv.sysarch.lab2.homeautomation.helpClass.ProductReceipt;
 import at.fhv.sysarch.lab2.homeautomation.helpClass.Receipt;
 import at.fhv.sysarch.lab2.homeautomation.products.Product;
@@ -47,6 +46,7 @@ public class InternetEnvironment extends AbstractBehavior<InternetEnvironment.In
 
     private final String deviceId;
     private final String groupId;
+    private static int count = 0;
     private Map<Product, Integer> orderedProducts = new HashMap<Product, Integer>();
 
     public InternetEnvironment(ActorContext<InternetEnvironmentCommand> context, String deviceId, String groupId) {
@@ -69,7 +69,7 @@ public class InternetEnvironment extends AbstractBehavior<InternetEnvironment.In
     }
 
     private Behavior<InternetEnvironmentCommand> processOrder(ProcessOrder order) {
-        getContext().getLog().info("InternetEnvironment actor read the order{}", order.order.toString());
+        getContext().getLog().debug("InternetEnvironment actor read the order{}", order.order.toString());
             Receipt receipt = new Receipt();
         for (Product product : order.order.get().keySet()) {
             ProductReceipt productReceipt = new ProductReceipt();
@@ -80,24 +80,38 @@ public class InternetEnvironment extends AbstractBehavior<InternetEnvironment.In
             receipt.addProduct(productReceipt);
         }
         try {
-            FileWriter writer = new FileWriter("receipt.txt");
+            FileWriter writer = new FileWriter("receipt" + count + ".txt");
             writer.write(receipt.toString());
-            getContext().getLog().info("Receipt are created {}", receipt.toString());
+            getContext().getLog().debug("Receipt are created {}", receipt.toString());
+            count++;
             writer.close();
 
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        orderedProducts = order.order.get();
+        if (orderedProducts.size() == 0) {
+            orderedProducts = order.order.get();
+        } else {
+            for (Product product : order.order.get().keySet()) {
+                if (orderedProducts.containsKey(product)){
+                    int amount = orderedProducts.get(product) + order.order.get().get(product);
+                    orderedProducts.put(product, amount);
+                } else {
+                    orderedProducts.put(product, order.order.get().get(product));
+                }
+            }
+        }
 
         return this;
     }
 
     private Behavior<InternetEnvironmentCommand> onRequiredOrder(ReadOrder r){
-        getContext().getLog().info("Internet read request {}", r.replyTo);
-        r.replyTo.tell(new RequiredOrder(Optional.of(orderedProducts)));
-        orderedProducts = new HashMap<>();
+        getContext().getLog().debug("Internet read request {}", r.replyTo);
+        if (orderedProducts.size() > 0) {
+            r.replyTo.tell(new RequiredOrder(Optional.of(orderedProducts)));
+            orderedProducts = new HashMap<>();
+        }
         return this;
     }
 }

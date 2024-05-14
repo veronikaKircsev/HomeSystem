@@ -58,6 +58,7 @@ public class WeightMemory extends AbstractBehavior<WeightMemory.WeightMemoryComm
         super(context);
         this.maxWeight = maxWeight;
         this.deviceId = deviceId;
+        getContext().getLog().info("WeightMemory is running");
     }
 
     public static Behavior<WeightMemory.WeightMemoryCommand> create(double maxWeight, String deviceId) {
@@ -75,14 +76,14 @@ public class WeightMemory extends AbstractBehavior<WeightMemory.WeightMemoryComm
     }
 
     private Behavior<WeightMemoryCommand> consumeProduct(ConsumeProduct c){
-        getContext().getLog().info("WeightMemory reading the consume {} in {}", c.value.get(), c.units.get());
+        getContext().getLog().debug("WeightMemory reading the consume {} in {}", c.value.get(), c.units.get());
         if (c.value.get() != null){
             sumWeight-=c.value.get();
         }
         return this;
     }
     private Behavior<WeightMemoryCommand> fillUpProduct(FillUpProduct c){
-        getContext().getLog().info("WeightMemory reading the fillUp {} in {}", c.value.get(), c.units.get());
+        getContext().getLog().debug("WeightMemory reading the fillUp {} in {}", c.value.get(), c.units.get());
         if (c.value.get() != null){
             sumWeight+=c.value.get();
         }
@@ -90,7 +91,7 @@ public class WeightMemory extends AbstractBehavior<WeightMemory.WeightMemoryComm
     }
 
     private Behavior<WeightMemoryCommand> onRequiredWeight(ReadWeight r){
-        getContext().getLog().info("WeightMemory read request {}", r.replyTo);
+        getContext().getLog().debug("WeightMemory read request {}", r.replyTo);
         r.replyTo.tell(new RequiredWeight(Optional.of(maxWeight-sumWeight)));
         return this;
     }

@@ -6,7 +6,6 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
-import at.fhv.sysarch.lab2.homeautomation.Environment.TemperatureEnvironment;
 import at.fhv.sysarch.lab2.homeautomation.products.Product;
 
 import java.time.Duration;
@@ -77,6 +76,7 @@ public class OrderProcessManager extends AbstractBehavior<OrderProcessManager.Or
         this.weight = weight;
         this.gateway = gateway;
         this.orderHistoryManager = orderHistoryManager;
+        getContext().getLog().info("OrderProcessManager is running");
     }
 
 
@@ -100,7 +100,7 @@ public class OrderProcessManager extends AbstractBehavior<OrderProcessManager.Or
 
     private Behavior<OrderCommand> processFreePlaces(StartOrder o) {
 
-        getContext().getLog().info("OrderProcess reading {}", o.order.get());
+        getContext().getLog().debug("OrderProcess reading {}", o.order.get());
 
         getContext().ask(
                 SpaceMemory.RequiredSpace.class,
@@ -109,10 +109,10 @@ public class OrderProcessManager extends AbstractBehavior<OrderProcessManager.Or
                 (ActorRef<SpaceMemory.RequiredSpace> ref) -> new SpaceMemory.ReadSpace(ref),
                 (response, throwable) -> {
                     if (response != null) {
-                        getContext().getLog().info("Request get {}", response.value);
+                        getContext().getLog().debug("Request get {}", response.value);
                         return new SetSpace(response.value, o.order);
                     } else {
-                        getContext().getLog().info("Request failed");
+                        getContext().getLog().debug("Request failed");
                         return new SetSpace(Optional.empty(), o.order);
                     }
                 });
@@ -124,10 +124,10 @@ public class OrderProcessManager extends AbstractBehavior<OrderProcessManager.Or
                 (ActorRef<WeightMemory.RequiredWeight> ref) -> new WeightMemory.ReadWeight(ref),
                 (response, throwable) -> {
                     if (response != null) {
-                        getContext().getLog().info("Request get {}", response.value);
+                        getContext().getLog().debug("Request get {}", response.value);
                         return new SetWeight(response.value, o.order);
                     } else {
-                        getContext().getLog().info("Request failed");
+                        getContext().getLog().debug("Request failed");
                         return new SetWeight(Optional.empty(), o.order);
                     }
                 });
@@ -136,29 +136,29 @@ public class OrderProcessManager extends AbstractBehavior<OrderProcessManager.Or
     }
 
     private Behavior<OrderCommand> setSpace(SetSpace s) {
-        getContext().getLog().info("Setting space{}", s.value.get());
+        getContext().getLog().debug("Setting space{}", s.value.get());
         spaceLeft = s.value.get();
         selfRef.tell(new TryOrder(s.order));
         return this;
     }
 
     private Behavior<OrderCommand> setWeight(SetWeight s) {
-        getContext().getLog().info("Setting weight {}", s.value.get());
+        getContext().getLog().debug("Setting weight {}", s.value.get());
         weightSpaceLeft = s.value.get();
         selfRef.tell(new TryOrder(s.order));
         return this;
     }
 
     private Behavior<OrderCommand> tryOrder(TryOrder o) {
+        getContext().getLog().debug("tryOrder");
         if (spaceLeft !=0 && weightSpaceLeft !=0) {
             int countSpace = 0;
             double countedWeight = 0;
 
             for (Product product : o.order.get().keySet()) {
                 int productAmount = o.order.get().get(product);
-                double weight = product.getWeightInKg();
                 double productsWeight = product.getWeightInKg() * productAmount;
-                getContext().getLog().info("OrderProcessor reading {} with sumWeight {} and amount {}", product.getName(),
+                getContext().getLog().debug("OrderProcessor reading {} with sumWeight {} and amount {}", product.getName(),
                         productsWeight, productAmount);
                 countSpace += productAmount;
                 countedWeight += productsWeight;
@@ -167,9 +167,9 @@ public class OrderProcessManager extends AbstractBehavior<OrderProcessManager.Or
             if (spaceLeft >= countSpace && weightSpaceLeft >= countedWeight){
                 gateway.tell(new Gateway.SendOrder(o.order));
                 orderHistoryManager.tell(new OrderHistoryManager.SaveOrder(o.order));
-                getContext().getLog().info("Order was sent out");
+                getContext().getLog().debug("Order was sent out");
             } else {
-                getContext().getLog().info("Sorry the space left not enough for this order");
+                getContext().getLog().debug("Sorry the space left not enough for this order");
             }
             spaceLeft = 0;
             weightSpaceLeft = 0;

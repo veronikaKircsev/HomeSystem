@@ -33,6 +33,7 @@ public class Gateway extends AbstractBehavior<Gateway.GatewayCommand> {
         this.deviceId = deviceId;
         this.groupId = groupId;
         this.internet = internet;
+        getContext().getLog().info("Gateway is running");
     }
 
     public static Behavior<GatewayCommand> create(String deviceId, String groupId, ActorRef<InternetEnvironment.InternetEnvironmentCommand> internet) {
@@ -47,7 +48,7 @@ public class Gateway extends AbstractBehavior<Gateway.GatewayCommand> {
     }
 
     private Behavior<GatewayCommand> sendOrder(SendOrder order) {
-        getContext().getLog().info("Getaway process order {}", order.toString());
+        getContext().getLog().debug("Getaway process order {}", order.toString());
         internet.tell(new InternetEnvironment.ProcessOrder(order.orderedProducts));
         return this;
     }

@@ -8,9 +8,7 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import at.fhv.sysarch.lab2.homeautomation.products.Product;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public class ProductListMemory extends AbstractBehavior<ProductListMemory.ProductProcessCommand> {
 
@@ -52,11 +50,13 @@ public class ProductListMemory extends AbstractBehavior<ProductListMemory.Produc
     }
 
     private Map<Product, Integer> productList = new HashMap<>();
+    private Set<Product> missing = new HashSet<>();
     private ActorRef<OrderProcessManager.OrderCommand> order;
 
     public ProductListMemory(ActorContext<ProductProcessCommand> context, ActorRef<OrderProcessManager.OrderCommand> order) {
         super(context);
         this.order = order;
+        getContext().getLog().info("ProductListMemory is running");
     }
 
     public static Behavior<ProductListMemory.ProductProcessCommand> create(ActorRef<OrderProcessManager.OrderCommand> order) {
@@ -76,29 +76,35 @@ public class ProductListMemory extends AbstractBehavior<ProductListMemory.Produc
 
 
     private Behavior<ProductProcessCommand> consumeProduct(ConsumeProduct c) {
-        getContext().getLog().info("ProductList reading the consume{} and value {}", c.product.get()
+        getContext().getLog().debug("ProductList reading the consume{} and value {}", c.product.get()
                 , c.number.get());
         int amount;
         if (productList.get(c.product.get())!= 0) {
-            getContext().getLog().info("Product will be taken {}", c.product.get().getName());
+            getContext().getLog().debug("Product will be taken {}", c.product.get().getName());
             amount = productList.get(c.product.get());
             amount -= c.number.get();
             if (amount == 0) {
                 Map<Product, Integer> o = new HashMap<>();
-                o.put(c.product.get(), 3);
-                getContext().getLog().info("Order started {} ", c.product.get().getName());
+                missing.add(c.product.get());
+                for (Product p : missing){
+                        o.put(p, 2);
+                }
+                getContext().getLog().debug("Order started {} ", c.product.get().getName());
                 order.tell(new OrderProcessManager.StartOrder(Optional.of(o)));
                 }
             productList.put(c.product.get(), amount);
         } else {
-            getContext().getLog().info("Fridge don't have enough {}" + c.product.get() );
+            getContext().getLog().debug("Fridge don't have enough {}" + c.product.get() );
         }
         return this;
     }
 
     private Behavior<ProductProcessCommand> fillUpProduct(FillUpProduct f) {
-        getContext().getLog().info("ProductList reading the fillUp {}", f.products.get());
+        getContext().getLog().debug("ProductList reading the fillUp {}", f.products.get());
         for (Product product: f.products.get().keySet()){
+            if (missing.contains(product)){
+                missing.remove(product);
+            }
             if (productList.containsKey(product)){
                 int amount = productList.get(product) + f.products.get().get(product);
                 productList.put(product, amount);
@@ -111,6 +117,7 @@ public class ProductListMemory extends AbstractBehavior<ProductListMemory.Produc
 
 
     private Behavior<ProductProcessCommand> onRequest(RequestProducts request) {
+        getContext().getLog().debug("ProductListMemory reads request");
         StringBuilder sb = new StringBuilder();
         for (Product product : productList.keySet()){
             sb.append(product.getName()).append(" ").append(productList.get(product)).append("\n");

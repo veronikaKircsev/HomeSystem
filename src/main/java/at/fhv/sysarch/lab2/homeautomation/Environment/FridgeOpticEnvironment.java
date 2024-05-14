@@ -48,7 +48,7 @@ public class FridgeOpticEnvironment extends AbstractBehavior<FridgeOpticEnvironm
         this.fridge = fridge;
         this.internet = internet;
         this.timeScheduler = timeScheduler;
-        this.timeScheduler.startTimerAtFixedRate(new ShouldFill(), Duration.ofSeconds(30));
+        this.timeScheduler.startTimerAtFixedRate(new ShouldFill(), Duration.ofSeconds(60));
         getContext().getLog().info("FridgeOpticEnvironment is running");
     }
 
@@ -70,7 +70,7 @@ public class FridgeOpticEnvironment extends AbstractBehavior<FridgeOpticEnvironm
 
 
     private Behavior<FridgeOpticEnvironmentCommand> placeProducts(PlaceProducts p) {
-        getContext().getLog().info("FridgeOpticEnvironment place product command {}", p.products.get());
+        getContext().getLog().debug("FridgeOpticEnvironment place product command {}", p.products.get());
         for (Product product : p.products.get().keySet()){
             if (products.isEmpty()){
                 products = p.products.get();
@@ -87,13 +87,13 @@ public class FridgeOpticEnvironment extends AbstractBehavior<FridgeOpticEnvironm
     }
 
     private Behavior<FridgeOpticEnvironmentCommand> consumeProducts(ConsumeProducts p) {
-        getContext().getLog().info("FridgeOpticEnvironment read consume {}", p.product.get().getName());
+        getContext().getLog().debug("FridgeOpticEnvironment read consume {}", p.product.get().getName());
         if (products.get(p.product.get()) > 0){
             int amount = products.get(p.product.get()) - 1;
             products.put(p.product.get(), amount);
             fridge.tell(new Fridge.Consume(p.product));
         } else {
-            getContext().getLog().info("The {} not there", p.product.get().getName());
+            getContext().getLog().debug("The {} not there", p.product.get().getName());
         }
         return this;
     }
@@ -105,10 +105,10 @@ public class FridgeOpticEnvironment extends AbstractBehavior<FridgeOpticEnvironm
                 (ActorRef<InternetEnvironment.RequiredOrder> ref) -> new InternetEnvironment.ReadOrder(ref),
                 (response, throwable) -> {
                     if (response != null) {
-                        getContext().getLog().info("Request get {}", response.order);
+                        getContext().getLog().debug("Request get {}", response.order);
                         return new PlaceProducts(response.order);
                     } else {
-                        getContext().getLog().info("Request failed");
+                        getContext().getLog().debug("Request failed");
                     return null;
                     }
                 });

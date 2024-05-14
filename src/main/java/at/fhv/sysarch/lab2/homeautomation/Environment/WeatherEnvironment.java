@@ -50,6 +50,7 @@ public class WeatherEnvironment extends AbstractBehavior<WeatherEnvironment.Weat
         this.weatherSensor = weatherSensor;
         this.weatherTimeScheduler = weatherTimer;
         this.weatherTimeScheduler.startTimerAtFixedRate(new WeatherConditionsChanger(), Duration.ofSeconds(40));
+        getContext().getLog().info("WeatherEnvironmentChanger started");
     }
 
     @Override
@@ -64,7 +65,7 @@ public class WeatherEnvironment extends AbstractBehavior<WeatherEnvironment.Weat
 
     private Behavior<WeatherEnvironmentCommand> onSetWeather(SetWeather command) {
         this.weather = command.weather.get();
-        getContext().getLog().info("Environment received {}", weather.toString());
+        getContext().getLog().debug("Environment received {}", weather.toString());
         return this;
     }
 
@@ -73,7 +74,7 @@ public class WeatherEnvironment extends AbstractBehavior<WeatherEnvironment.Weat
         Weather[] allWeathers = Weather.values();
         Random random = new Random();
         int randomIndex = random.nextInt(allWeathers.length);
-        getContext().getLog().info("Environment Change {} to {}", weather, allWeathers[randomIndex].toString());
+        getContext().getLog().debug("Environment Change {} to {}", weather, allWeathers[randomIndex].toString());
         selfRef.tell(new WeatherEnvironment.SetWeather(Optional.of(allWeathers[randomIndex])));
         this.weatherSensor.tell(new WeatherSensor.ChangeWeather(Optional.of(allWeathers[randomIndex])));
         return this;
@@ -81,7 +82,7 @@ public class WeatherEnvironment extends AbstractBehavior<WeatherEnvironment.Weat
 
 
     private WeatherEnvironment onPostStop(){
-        getContext().getLog().info("WeatherEnvironment actor stopped");
+        getContext().getLog().debug("WeatherEnvironment actor stopped");
         return this;
     }
 }

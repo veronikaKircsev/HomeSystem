@@ -89,98 +89,114 @@ public class UI extends AbstractBehavior<Void> {
         Scanner scanner = new Scanner(System.in);
         String[] input = null;
         String reader = "";
+        Product product;
+        Weather weather = null;
+        boolean com;
 
 
         while (!reader.equalsIgnoreCase("quit")) {
+            System.out.println("Please enter command:\n get {product} (butter/cheese/fruit/joghurt/milk/vegetables)" +
+                    "\n history (for order history)" +
+                    "\n order {some products} (butter/cheese/fruit/joghurt/milk/vegetables)" +
+                    "\n setWE (set weather environment) {weather} (SUNNY, CLOUDY, RAINY, SNOWY, STORMY, WINDY, FOGGY)" +
+                    "\n setWeSens (set weather sensor) {weather} (SUNNY, CLOUDY, RAINY, SNOWY, STORMY, WINDY, FOGGY)" +
+                    "\n setTemp (set temperature environment) {number}" +
+                    "\n setTempS (set temperature sensor) {number}" +
+                    "\n blinds {up/any}" +
+                    "\n play (meditation) {on/any}" +
+                    "\n ac {on/any}" +
+                    "\n acSet (temperature) {number}" +
+                    "\n product (to list products)");
             reader = scanner.nextLine();
             // TODO: change input handling
             String[] command = reader.split(" ");
 
-            //implement consume by environment
-            if (command[0].equals("get")){
-                Product product = setProduct(command[1]);
-                this.fridgeOpticEnvironment.tell(new FridgeOpticEnvironment.ConsumeProducts(Optional.ofNullable(product)));
-            }
-
-            //implement the order history by fridge
-            if (command[0].equals("history")){
-                this.fridge.tell(new Fridge.OrderHistory());
-            }
-            // implement ordering by fridge
-            if (command[0].equals("order")){
-                List<Product> productsOrder = new ArrayList<>();
-                for (int i = 1; i < command.length; i++){
-                    Product product;
+            switch (command[0].toLowerCase()) {
+                // implement consume by environment
+                case "get":
+                    product = setProduct(command[1]);
+                    this.fridgeOpticEnvironment.tell(new FridgeOpticEnvironment.ConsumeProducts(Optional.ofNullable(product)));
+                    break;
+                // implement the order history by fridge
+                case "history":
+                    this.fridge.tell(new Fridge.OrderHistory());
+                    break;
+                // implement ordering by fridge
+                case "order":
+                    List<Product> productsOrder = new ArrayList<>();
+                    for (int i = 1; i < command.length; i++) {
                         try {
-                        product = setProduct(command[i]);
-                        productsOrder.add(product);
-                        } catch (Exception e){
+                            product = setProduct(command[i]);
+                            productsOrder.add(product);
+                        } catch (Exception e) {
                             System.out.println("not product");
                         }
-                }
-                this.fridge.tell(new Fridge.Order(Optional.of(productsOrder)));
-            }
-            // implement set weather by environment
-            if (command[0].equalsIgnoreCase("setWE")){
-                Weather weather = null;
-                try {
-                    weather = setWeather(command[1]);
-                } catch (Exception e) {
-                    System.out.println("Failed to set weather");
-                }
-                if (weather != null){
-                    this.weatherEnvironment.tell(new WeatherEnvironment.SetWeather(Optional.of(weather)));
-                }
-            }
-            //implement set temperature by environment
-            if (command[0].equalsIgnoreCase("setTE")){
-                this.temperatureEnvironment.tell(new TemperatureEnvironment.SetTemperature(Optional.of(Double.valueOf(command[1]))));
-            }
-            //implement set sensor daten by weather sensor
-            if (command[0].equalsIgnoreCase("setWS")){
-                Weather weather = null;
-                try {
-                    weather = setWeather(command[1]);
-                } catch (Exception e) {
-                    System.out.println("Failed to set weather");
-                }
-                if (weather != null){
-                    this.weatherSensor.tell(new WeatherSensor.ChangeWeather(Optional.of(weather)));
-                }
-            }
-
-            // implement the blinds command
-            if (command[0].equalsIgnoreCase("blinds")){
-                boolean com = command[1].equals("up") ? true : false;
-                this.blinds.tell(new Blinds.ChangeCondition(Optional.of(com), Optional.of(BlindsActuator.WeatherSensor)));
-            }
-
-
-
-            //set sensor daten by temperature sensor
-            // it should be better it takes a command plus a temperature
-            if(command[0].equals("setTS")) {
-                this.tempSensor.tell(new TemperatureSensor.ReadTemperature(Optional.of(Double.valueOf(command[1])), Optional.of("Celsius")));
-            }
-
-            // it should be better
-            // onOff
-            if(command[0].equals("ac")) {
-                boolean com = command[1].equals("y") ? true : false;
-                this.airCondition.tell(new AirCondition.PowerAirCondition(Optional.of(Boolean.valueOf(com))));
-            }
-
-            //mediaStation play it should be better done
-            //media station on off
-            if (command[0].equals("play")){
-                boolean com = command[1].equals("y") ? true : false;
-                this.mediaStation.tell(new MediaStation.ChangeCondition(Optional.of(Boolean.valueOf(com))));
-
-            }
-            //implement the contained products by fridge
-            // ask the products
-            if (command[0].equals("product")){
-                this.fridge.tell(new Fridge.ProductsRequest(Optional.of(command[0])));
+                    }
+                    this.fridge.tell(new Fridge.Order(Optional.of(productsOrder)));
+                    break;
+                // implement set weather by environment
+                case "setwe":
+                    try {
+                        weather = setWeather(command[1]);
+                    } catch (Exception e) {
+                        System.out.println("Failed to set weather");
+                    }
+                    if (weather != null) {
+                        this.weatherEnvironment.tell(new WeatherEnvironment.SetWeather(Optional.of(weather)));
+                    }
+                    break;
+                //implement set temperature by environment
+                case "settemp":
+                    this.temperatureEnvironment.tell(new TemperatureEnvironment.SetTemperature(Optional.of(Double.valueOf(command[1]))));
+                    break;
+                //implement set sensor daten by weather sensor
+                case"setwesens":
+                    try {
+                        weather = setWeather(command[1]);
+                    } catch (Exception e) {
+                        System.out.println("Failed to set weather");
+                    }
+                    if (weather != null) {
+                        this.weatherSensor.tell(new WeatherSensor.ChangeWeather(Optional.of(weather)));
+                    }
+                    break;
+                // implement the blinds command
+                case "blinds":
+                    com = command[1].equals("up") ? true : false;
+                    this.blinds.tell(new Blinds.ChangeCondition(Optional.of(com), Optional.of(BlindsActuator.WeatherSensor)));
+                    break;
+                //set sensor daten by temperature sensor
+                // it should be better it takes a command plus a temperature
+                case "settemps":
+                    this.tempSensor.tell(new TemperatureSensor.ReadTemperature(Optional.of(Double.valueOf(command[1])), Optional.of("Celsius")));
+                    break;
+                // it should be better
+                // onOff
+                case "ac":
+                    com = command[1].equals("on") ? true : false;
+                    this.airCondition.tell(new AirCondition.PowerAirCondition(Optional.of(Boolean.valueOf(com))));
+                    break;
+                case "acSet":
+                    try {
+                        double temp = Integer.parseInt(command[1]);
+                        this.airCondition.tell(new AirCondition.EnrichedTemperature(Optional.of(temp), Optional.of("Celsius")));
+                    } catch (Exception e) {
+                        System.out.println("wrong command");
+                    }
+                    break;
+                //mediaStation play it should be better done
+                //media station on off
+                case "play":
+                    com = command[1].equals("on") ? true : false;
+                    this.mediaStation.tell(new MediaStation.ChangeCondition(Optional.of(Boolean.valueOf(com))));
+                    break;
+                //implement the contained products by fridge
+                // ask the products
+                case "product":
+                    this.fridge.tell(new Fridge.ProductsRequest(Optional.of(command[0])));
+                    break;
+                default:
+                    System.out.println("Sorry your input is unknown");
             }
             // TODO: process Input
         }
@@ -189,7 +205,7 @@ public class UI extends AbstractBehavior<Void> {
 
     private Product setProduct(String p){
         Product product = null;
-        switch (p){
+        switch (p.toLowerCase()){
             case "butter":
                 product = new Butter();
                 break;
@@ -216,7 +232,7 @@ public class UI extends AbstractBehavior<Void> {
 
     private Weather setWeather(String w){
         Weather weather = null;
-        switch (w){
+        switch (w.toLowerCase()){
             case "sunny":
                 weather = Weather.SUNNY;
                 break;

@@ -54,6 +54,7 @@ public class TemperatureEnvironment extends AbstractBehavior<TemperatureEnvironm
         this.temperatureTimeScheduler = tempTimer;
         this.temperature = startingTemperature;
         this.temperatureTimeScheduler.startTimerAtFixedRate(new TemperatureChanger(), Duration.ofSeconds(30));
+        getContext().getLog().info("TemperatureEnvironmentChanger started");
     }
 
     @Override
@@ -68,7 +69,7 @@ public class TemperatureEnvironment extends AbstractBehavior<TemperatureEnvironm
 
     private Behavior<TemperatureEnvironmentCommand> onSetTemperature(SetTemperature command) {
         this.temperature = command.celsius.get();
-        getContext().getLog().info("TemperatureEnvironment received {}", temperature);
+        getContext().getLog().debug("TemperatureEnvironment received {}", temperature);
         return this;
     }
 
@@ -78,14 +79,14 @@ public class TemperatureEnvironment extends AbstractBehavior<TemperatureEnvironm
         this.temperature += randomValue;
         double roundedValue = temperature >= 0 ? Math.floor(temperature * 100) / 100 : Math.ceil(temperature * 100) / 100;
         temperature = roundedValue;
-        getContext().getLog().info("TemperatureEnvironment received {}", temperature);
+        getContext().getLog().debug("TemperatureEnvironment received {}", temperature);
         this.temperatureSensor.tell(new TemperatureSensor.ReadTemperature(Optional.of(temperature), Optional.of("Celsius")));
         selfRef.tell(new TemperatureEnvironment.SetTemperature(Optional.of(temperature)));
         return this;
     }
 
     private TemperatureEnvironment onPostStop(){
-        getContext().getLog().info("TemperatureEnvironment actor stopped");
+        getContext().getLog().debug("TemperatureEnvironment actor stopped");
         return this;
     }
 }
