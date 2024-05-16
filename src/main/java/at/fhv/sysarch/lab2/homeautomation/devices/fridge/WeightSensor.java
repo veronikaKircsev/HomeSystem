@@ -11,7 +11,7 @@ import at.fhv.sysarch.lab2.homeautomation.products.Product;
 import java.util.Map;
 import java.util.Optional;
 
-public class WeightSensor extends AbstractBehavior<WeightSensor.WeightSensorCommand> {
+public class WeightSensor extends AbstractBehavior<WeightSensor.WeightSensorCommand>{
 
     public interface WeightSensorCommand{}
 

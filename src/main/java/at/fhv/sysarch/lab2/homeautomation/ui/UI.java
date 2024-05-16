@@ -98,30 +98,28 @@ public class UI extends AbstractBehavior<Void> {
             System.out.println("Please enter command:\n get {product} (butter/cheese/fruit/joghurt/milk/vegetables)" +
                     "\n history (for order history)" +
                     "\n order {some products} (butter/cheese/fruit/joghurt/milk/vegetables)" +
-                    "\n setWE (set weather environment) {weather} (SUNNY, CLOUDY, RAINY, SNOWY, STORMY, WINDY, FOGGY)" +
-                    "\n setWeSens (set weather sensor) {weather} (SUNNY, CLOUDY, RAINY, SNOWY, STORMY, WINDY, FOGGY)" +
+                    "\n setWeather (set weather environment) {weather} (SUNNY, CLOUDY, RAINY, SNOWY, STORMY, WINDY, FOGGY)" +
+                    "\n setWeatherSens (set weather sensor) {weather} (SUNNY, CLOUDY, RAINY, SNOWY, STORMY, WINDY, FOGGY)" +
                     "\n setTemp (set temperature environment) {number}" +
-                    "\n setTempS (set temperature sensor) {number}" +
+                    "\n setTempSens (set temperature sensor) {number}" +
                     "\n blinds {up/any}" +
                     "\n play (meditation) {on/any}" +
                     "\n ac {on/any}" +
-                    "\n acSet (temperature) {number}" +
+                    "\n acSetTemp (temperature) {number}" +
                     "\n product (to list products)");
             reader = scanner.nextLine();
-            // TODO: change input handling
+
             String[] command = reader.split(" ");
 
             switch (command[0].toLowerCase()) {
-                // implement consume by environment
+
                 case "get":
                     product = setProduct(command[1]);
                     this.fridgeOpticEnvironment.tell(new FridgeOpticEnvironment.ConsumeProducts(Optional.ofNullable(product)));
                     break;
-                // implement the order history by fridge
                 case "history":
                     this.fridge.tell(new Fridge.OrderHistory());
                     break;
-                // implement ordering by fridge
                 case "order":
                     List<Product> productsOrder = new ArrayList<>();
                     for (int i = 1; i < command.length; i++) {
@@ -134,8 +132,7 @@ public class UI extends AbstractBehavior<Void> {
                     }
                     this.fridge.tell(new Fridge.Order(Optional.of(productsOrder)));
                     break;
-                // implement set weather by environment
-                case "setwe":
+                case "setweather":
                     try {
                         weather = setWeather(command[1]);
                     } catch (Exception e) {
@@ -145,12 +142,10 @@ public class UI extends AbstractBehavior<Void> {
                         this.weatherEnvironment.tell(new WeatherEnvironment.SetWeather(Optional.of(weather)));
                     }
                     break;
-                //implement set temperature by environment
                 case "settemp":
                     this.temperatureEnvironment.tell(new TemperatureEnvironment.SetTemperature(Optional.of(Double.valueOf(command[1]))));
                     break;
-                //implement set sensor daten by weather sensor
-                case"setwesens":
+                case"setweathersens":
                     try {
                         weather = setWeather(command[1]);
                     } catch (Exception e) {
@@ -160,24 +155,18 @@ public class UI extends AbstractBehavior<Void> {
                         this.weatherSensor.tell(new WeatherSensor.ChangeWeather(Optional.of(weather)));
                     }
                     break;
-                // implement the blinds command
                 case "blinds":
                     com = command[1].equals("up") ? true : false;
                     this.blinds.tell(new Blinds.ChangeCondition(Optional.of(com), Optional.of(BlindsActuator.WeatherSensor)));
                     break;
-                //set sensor daten by temperature sensor
-                // it should be better it takes a command plus a temperature
-                case "settemps":
+                case "settempsens":
                     this.tempSensor.tell(new TemperatureSensor.ReadTemperature(Optional.of(Double.valueOf(command[1])), Optional.of("Celsius")));
                     break;
-                // it should be better
-                // onOff
                 case "ac":
                     com = command[1].equals("on") ? true : false;
                     this.airCondition.tell(new AirCondition.PowerAirCondition(Optional.of(Boolean.valueOf(com))));
                     break;
-
-                case "acSet":
+                case "acsetemp":
                     try {
                         double temp = Double.parseDouble(command[1]);
                         this.airCondition.tell(new AirCondition.EnrichedTemperature(Optional.of(temp), Optional.of("Celsius")));
@@ -185,19 +174,14 @@ public class UI extends AbstractBehavior<Void> {
                         System.out.println("wrong command");
                     }
                     break;
-                //mediaStation play it should be better done
-                //media station on off
                 case "play":
                     com = command[1].equals("on") ? true : false;
                     this.mediaStation.tell(new MediaStation.ChangeCondition(Optional.of(Boolean.valueOf(com))));
                     break;
-                //implement the contained products by fridge
-                // ask the products
                 case "product":
                     this.fridge.tell(new Fridge.ProductsRequest(Optional.of(command[0])));
                     break;
             }
-            // TODO: process Input
         }
         getContext().getLog().info("UI done");
     }
