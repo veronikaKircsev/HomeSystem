@@ -26,7 +26,7 @@ public class WeatherEnvironment extends AbstractBehavior<WeatherEnvironment.Weat
 
     private Weather weather;
     private ActorRef<WeatherSensor.WeatherCommand> weatherSensor;
-    ActorContext<WeatherEnvironment.WeatherEnvironmentCommand> context = getContext();
+    private ActorContext<WeatherEnvironment.WeatherEnvironmentCommand> context = getContext();
     private ActorRef<WeatherEnvironment.WeatherEnvironmentCommand> selfRef = context.getSelf();
     private final TimerScheduler<WeatherEnvironmentCommand> weatherTimeScheduler;
 
