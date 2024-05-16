@@ -7,10 +7,11 @@ import java.util.HashMap;
 public class Order {
 
     private HashMap<Product, Integer> order = new HashMap<>();
-    private static int orderCount = 0;
+    private static int counter = 0;
+    private int orderCount;
 
     public Order(){
-        orderCount++;
+        orderCount = ++counter;
     }
 
     public HashMap<Product, Integer> getOrder() {
@@ -21,7 +22,7 @@ public class Order {
         this.order = order;
     }
 
-    public static int getOrderCount() {
+    public int getOrderCount() {
         return orderCount;
     }
 

@@ -176,9 +176,10 @@ public class UI extends AbstractBehavior<Void> {
                     com = command[1].equals("on") ? true : false;
                     this.airCondition.tell(new AirCondition.PowerAirCondition(Optional.of(Boolean.valueOf(com))));
                     break;
+
                 case "acSet":
                     try {
-                        double temp = Integer.parseInt(command[1]);
+                        double temp = Double.parseDouble(command[1]);
                         this.airCondition.tell(new AirCondition.EnrichedTemperature(Optional.of(temp), Optional.of("Celsius")));
                     } catch (Exception e) {
                         System.out.println("wrong command");
@@ -195,8 +196,6 @@ public class UI extends AbstractBehavior<Void> {
                 case "product":
                     this.fridge.tell(new Fridge.ProductsRequest(Optional.of(command[0])));
                     break;
-                default:
-                    System.out.println("Sorry your input is unknown");
             }
             // TODO: process Input
         }

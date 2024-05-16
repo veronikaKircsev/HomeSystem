@@ -74,6 +74,7 @@ public class OrderHistoryManager extends AbstractBehavior<OrderHistoryManager.Or
     private Behavior<OrderHistoryManagerCommand> onRequest(OrderHistory request) {
         getContext().getLog().debug("OrderHistoryManager read request");
         StringBuilder sb = new StringBuilder();
+        sb.append("\n");
         for (Order o : order){
             sb.append(o.getOrderCount()).append("\n");
             for (Product p : o.getOrder().keySet()) {
